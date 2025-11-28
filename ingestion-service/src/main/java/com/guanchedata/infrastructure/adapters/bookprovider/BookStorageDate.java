@@ -25,6 +25,8 @@ public class BookStorageDate implements BookStorage {
         String header = contentSeparated[0];
         String body = contentSeparated[1];
 
+        // EXTRACT METHOD
+
         Path path = pathGenerator.generatePath();
 
         Path headerPath = path.resolve(String.format("%d_header.txt", bookId));
@@ -32,6 +34,8 @@ public class BookStorageDate implements BookStorage {
 
         Files.writeString(headerPath, header);
         Files.writeString(contentPath, body);
+
+        // EXTRACT METHOD
 
         this.hazelcastReplicationManager.getHazelcastReplicationExecuter().replicate(bookId,header,body);
 

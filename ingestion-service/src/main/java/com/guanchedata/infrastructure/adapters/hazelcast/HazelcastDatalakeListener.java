@@ -2,6 +2,7 @@ package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.model.NodeInfoProvider;
 import com.guanchedata.model.ReplicatedBook;
+import com.guanchedata.util.DateTimePathGenerator;
 import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
@@ -9,7 +10,7 @@ import com.hazelcast.multimap.MultiMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class HazelcastDatalakeListener extends AbstractEntryListener<Integer, ReplicatedBook> {
 
@@ -25,7 +26,7 @@ public class HazelcastDatalakeListener extends AbstractEntryListener<Integer, Re
         this.replicationFactor = replicationFactor;
     }
 
-    public void register() {
+    public void registerListener() {
         MultiMap<Integer, ReplicatedBook> datalake = hazelcast.getMultiMap("datalake");
         datalake.addEntryListener(this, true);
     }
@@ -42,12 +43,24 @@ public class HazelcastDatalakeListener extends AbstractEntryListener<Integer, Re
         if (current >= replicationFactor) return;
         replicaCount.put(bookId, current + 1);
 
+        saveRetrievedBook(bookId, replicated.getHeader(), replicated.getBody());
+    }
+
+    public void saveRetrievedBook(int bookId, String header, String body) {
         try {
-            Files.writeString(Paths.get("/app/datalake/" + bookId + "_header.txt"), replicated.getHeader());
-            Files.writeString(Paths.get("/app/datalake/" + bookId + "_body.txt"), replicated.getBody());
-            System.out.println("Libro " + bookId + "replicado en nodo " + this.nodeInfoProvider.getNodeId());
+
+            DateTimePathGenerator dateTimePathGenerator = new DateTimePathGenerator("datalake");
+            // add env var for datalakepath?
+            Path path = dateTimePathGenerator.generatePath();
+
+            Path headerPath = path.resolve(String.format("%d_header.txt", bookId));
+            Path contentPath = path.resolve(String.format("%d_body.txt", bookId));
+
+            Files.writeString(headerPath, header);
+            Files.writeString(contentPath, body);
+
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

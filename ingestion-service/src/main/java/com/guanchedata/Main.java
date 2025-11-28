@@ -19,7 +19,7 @@ public class Main {
 
         PathGenerator pathGenerator = new DateTimePathGenerator(args[0]);
         GutenbergBookContentSeparator separator = new GutenbergBookContentSeparator();
-        BookStorage storageDate = new BookStorageDate(pathGenerator, separator, new HazelcastReplicationManager("SearchEngine", 3));
+        BookStorage storageDate = new BookStorageDate(pathGenerator, separator, new HazelcastReplicationManager("SearchEngine", Integer.parseInt(System.getenv("REPLICATION_FACTOR"))));
         BookDownloadStatusStore bookDownloadLog = new BookDownloadLog(args[1]);
 
         BookDownloader ingestBookService = new IngestBookService(storageDate, bookDownloadLog);

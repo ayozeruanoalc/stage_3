@@ -32,7 +32,7 @@ public class IngestBookService implements BookDownloader {
             String response = fetchBook(bookId);
             Path savedPath = storageDate.save(bookId, response);
             bookDownloadLog.registerDownload(bookId);
-
+            // activeMQ post?
             return successResponse(bookId, savedPath);
         } catch (Exception e) {
             return errorResponse(bookId, e);
