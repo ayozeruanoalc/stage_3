@@ -7,6 +7,7 @@ import com.guanchedata.infrastructure.adapters.apiservices.ListBooksService;
 import com.guanchedata.infrastructure.adapters.bookprovider.BookDownloadLog;
 import com.guanchedata.infrastructure.adapters.bookprovider.BookStorageDate;
 import com.guanchedata.infrastructure.adapters.bookprovider.GutenbergBookContentSeparator;
+import com.guanchedata.infrastructure.adapters.hazelcast.HazelcastReplicationManager;
 import com.guanchedata.infrastructure.ports.*;
 import com.guanchedata.util.DateTimePathGenerator;
 import io.javalin.Javalin;
@@ -22,7 +23,7 @@ public class Main {
 
         PathGenerator pathGenerator = new DateTimePathGenerator(args[0]);
         GutenbergBookContentSeparator separator = new GutenbergBookContentSeparator();
-        BookStorage storageDate = new BookStorageDate(pathGenerator, separator);
+        BookStorage storageDate = new BookStorageDate(pathGenerator, separator, new HazelcastReplicationManager("null",3));
         BookDownloadStatusStore bookDownloadLog = new BookDownloadLog(args[1]);
 
         BookDownloader ingestBookService = new IngestBookService(storageDate, bookDownloadLog);

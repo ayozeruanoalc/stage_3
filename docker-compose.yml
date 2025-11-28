@@ -4,8 +4,11 @@ services:
       context: ./ingestion-service/
     image: ingestion-service:latest
     ports:
-      - "7001:7001"
+      - "5701:5701"
     command: ['datalake', 'logs/log.log']
+    environment:
+      PUBLIC_IP: "" # IP
+      CRAWLER_ID: 1
     volumes:
       - ./mnt/datalake:/app/datalake
       - ./mnt/logs:/app/logs
