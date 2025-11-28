@@ -1,13 +1,9 @@
 package com.guanchedata.infrastructure.adapters.hazelcast;
 
-import com.guanchedata.model.NodeInfoProvider;
-import com.guanchedata.model.ReplicatedBook;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.listener.EntryAddedListener;
-import com.hazelcast.multimap.MultiMap;
 
 public class HazelcastConfig {
 
@@ -25,8 +21,7 @@ public class HazelcastConfig {
         join.getAutoDetectionConfig().setEnabled(false);
 
         join.getTcpIpConfig()
-                .addMember("")
-                .addMember("")
+                .addMember(System.getenv("PUBLIC_IP"))
                 .addMember("")
                 .setEnabled(true);
 

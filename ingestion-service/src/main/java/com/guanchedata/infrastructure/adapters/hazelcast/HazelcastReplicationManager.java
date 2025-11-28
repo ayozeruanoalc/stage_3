@@ -11,10 +11,11 @@ public class HazelcastReplicationManager {
     HazelcastReplicationExecuter hazelcastReplicationExecuter;
 
     public HazelcastReplicationManager(String clusterName, int replicationFactor) {
-        this.nodeInfoProvider = new NodeInfoProvider(System.getenv("CRAWLER_ID")); // NODE IDENTIFIER
+        this.nodeInfoProvider = new NodeInfoProvider(System.getenv("PUBLIC_IP")); // NODE IDENTIFIER
         this.hazelcastInstance = new HazelcastConfig().initHazelcast(clusterName); // CREATE HAZELCAST MEMBER
         this.hazelcastDatalakeListener = new HazelcastDatalakeListener(this.hazelcastInstance,this.nodeInfoProvider,replicationFactor);
-        // (above) ADD LISTENER
+        this.hazelcastDatalakeListener.register();
+
         this.hazelcastReplicationExecuter = new HazelcastReplicationExecuter(this.hazelcastInstance, this.nodeInfoProvider);
     }
 

@@ -8,7 +8,6 @@ services:
     command: ['datalake', 'logs/log.log']
     environment:
       PUBLIC_IP: "" # IP
-      CRAWLER_ID: 1
     volumes:
       - ./mnt/datalake:/app/datalake
       - ./mnt/logs:/app/logs

@@ -12,10 +12,6 @@ import com.guanchedata.infrastructure.ports.*;
 import com.guanchedata.util.DateTimePathGenerator;
 import io.javalin.Javalin;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 public class Main {
     public static void main(String[] args) {
 
@@ -23,7 +19,7 @@ public class Main {
 
         PathGenerator pathGenerator = new DateTimePathGenerator(args[0]);
         GutenbergBookContentSeparator separator = new GutenbergBookContentSeparator();
-        BookStorage storageDate = new BookStorageDate(pathGenerator, separator, new HazelcastReplicationManager("null",3));
+        BookStorage storageDate = new BookStorageDate(pathGenerator, separator, new HazelcastReplicationManager("SearchEngine", 3));
         BookDownloadStatusStore bookDownloadLog = new BookDownloadLog(args[1]);
 
         BookDownloader ingestBookService = new IngestBookService(storageDate, bookDownloadLog);
