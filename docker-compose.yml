@@ -1,7 +1,7 @@
 services:
   ingestion1:
     build:
-      context: ./ingestion-service/
+      context: ./ingestion-service
     image: ingestion-service:latest
     container_name: ingestion1
     ports:
@@ -11,7 +11,7 @@ services:
       PUBLIC_IP: "" #IP
       HZ_PORT: "5701"
       REPLICATION_FACTOR: 3
-      BROKER_URL: tcp://activemq:61616
+      BROKER_URL: tcp://BROKER_URL:61616
       HAZELCAST_CLUSTER_NAME: SearchEngine
     volumes:
       - ./mnt/datalake:/app/datalake
@@ -36,6 +36,20 @@ services:
     depends_on:
       - activemq
       - ingestion1
+    networks:
+      - search_net
+
+
+  activemq:
+    image: rmohr/activemq:latest
+    container_name: activemq
+    restart: always
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    environment:
+      - ACTIVEMQ_ADMIN_LOGIN=admin
+      - ACTIVEMQ_ADMIN_PASSWORD=admin
     networks:
       - search_net
 
