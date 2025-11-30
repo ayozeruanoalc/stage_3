@@ -40,10 +40,10 @@ public class Main {
                 bookStatusService
         );
 
-        BookIngestionPeriodicExecutor bookIngestionExecutor = new BookIngestionPeriodicExecutor(hazelcastManager.getHazelcastInstance(),ingestBookService);
-
         HazelcastDatalakeRecovery recovery = new HazelcastDatalakeRecovery(hazelcastManager.getHazelcastInstance(), hazelcastManager.getNodeInfoProvider(), notifier);
         recovery.reloadMemoryFromDisk(args[0]);
+
+        BookIngestionPeriodicExecutor bookIngestionExecutor = new BookIngestionPeriodicExecutor(hazelcastManager.getHazelcastInstance(),ingestBookService);
 
         Javalin app = Javalin.create(config -> {
             config.http.defaultContentType = "application/json";
