@@ -37,14 +37,14 @@ public class HazelcastDatalakeRecovery {
                     try {
                         int bookId = extractBookId(bodyPath.getFileName().toString());
 
+                        if (datalake.containsKey(bookId)) {
+                            System.out.println("Book " + bookId + " already in the in-memory datalake. Skip.");
+                            return;
+                        }
+
                         FencedLock lock = hazelcast.getCPSubsystem().getLock("lock:book:" + bookId);
                         lock.lock();
                         try {
-                            if (datalake.containsKey(bookId)) {
-                                System.out.println("Book " + bookId + " already in the in-memory datalake. Skip.");
-                                return;
-                            }
-
                             Path headerPath = bodyPath.getParent().resolve(bookId + "_header.txt");
                             String header = Files.readString(headerPath);
                             String body = Files.readString(bodyPath);

@@ -6,8 +6,6 @@ import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
-import java.util.Arrays;
-
 public class HazelcastConfig {
 
     public HazelcastInstance initHazelcast(String clusterName) {
@@ -27,14 +25,10 @@ public class HazelcastConfig {
         join.getMulticastConfig().setEnabled(false);
         join.getAutoDetectionConfig().setEnabled(false);
         join.getTcpIpConfig()
-                .setEnabled(true)
-                .setMembers(Arrays.asList(
-                        ":5701", //IP
-                        ":5702" //IP
-                ));
+                //.setMembers(Arrays.asList()))
+                .setEnabled(true);
 
         config.setProperty("hazelcast.wait.seconds.before.join", "0");
-        config.setProperty("hazelcast.socket.bind.any", "true");
 
         return Hazelcast.newHazelcastInstance(config);
     }
