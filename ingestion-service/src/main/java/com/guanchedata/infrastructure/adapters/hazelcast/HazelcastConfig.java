@@ -21,6 +21,7 @@ public class HazelcastConfig {
         join.getAutoDetectionConfig().setEnabled(false);
 
         join.getTcpIpConfig()
+
                 //.setMembers(Arrays.asList())
                 .setEnabled(true);
 
