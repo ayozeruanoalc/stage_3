@@ -11,12 +11,10 @@ import java.nio.file.Path;
 public class BookStorageDate implements BookStorage {
     private final PathGenerator pathGenerator;
     private final GutenbergBookContentSeparator contentSeparator;
-    private final HazelcastReplicationManager hazelcastReplicationManager;
 
-    public BookStorageDate(PathGenerator pathGenerator, GutenbergBookContentSeparator contentSeparator, HazelcastReplicationManager hazelcastReplicationManager) {
+    public BookStorageDate(PathGenerator pathGenerator, GutenbergBookContentSeparator contentSeparator) {
         this.pathGenerator = pathGenerator;
         this.contentSeparator = contentSeparator;
-        this.hazelcastReplicationManager = hazelcastReplicationManager;
     }
 
     @Override
@@ -36,8 +34,6 @@ public class BookStorageDate implements BookStorage {
         Files.writeString(contentPath, body);
 
         // EXTRACT METHOD
-
-        this.hazelcastReplicationManager.getHazelcastReplicationExecuter().replicate(bookId,header,body);
 
         return path;
     }

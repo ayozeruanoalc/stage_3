@@ -1,6 +1,9 @@
 package com.guanchedata.infrastructure.adapters.hazelcast;
 
+import com.guanchedata.infrastructure.adapters.apiservices.IngestBookService;
+import com.guanchedata.infrastructure.adapters.bookprovider.BookStorageDate;
 import com.guanchedata.model.NodeInfoProvider;
+import com.guanchedata.util.GutenbergBookDownloader;
 import com.hazelcast.core.HazelcastInstance;
 
 public class HazelcastReplicationManager {
@@ -10,12 +13,12 @@ public class HazelcastReplicationManager {
     HazelcastDatalakeListener hazelcastDatalakeListener;
     HazelcastReplicationExecuter hazelcastReplicationExecuter;
 
-    public HazelcastReplicationManager(String clusterName, int replicationFactor) {
+    public HazelcastReplicationManager(String clusterName, int replicationFactor, GutenbergBookDownloader gutenbergBookDownloader, BookStorageDate bookStorageDate) {
         this.nodeInfoProvider = new NodeInfoProvider(System.getenv("PUBLIC_IP")); // NODE IDENTIFIER
         this.hazelcastInstance = new HazelcastConfig().initHazelcast(clusterName); // CREATE HAZELCAST MEMBER
-        this.hazelcastDatalakeListener = new HazelcastDatalakeListener(this.hazelcastInstance,this.nodeInfoProvider,replicationFactor);
+        this.hazelcastDatalakeListener = new HazelcastDatalakeListener(this.hazelcastInstance,this.nodeInfoProvider, gutenbergBookDownloader, bookStorageDate);
         this.hazelcastDatalakeListener.registerListener();
-        this.hazelcastReplicationExecuter = new HazelcastReplicationExecuter(this.hazelcastInstance, this.nodeInfoProvider);
+        this.hazelcastReplicationExecuter = new HazelcastReplicationExecuter(this.hazelcastInstance, this.nodeInfoProvider,replicationFactor);
     }
 
 

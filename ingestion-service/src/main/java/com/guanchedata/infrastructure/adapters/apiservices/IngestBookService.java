@@ -3,9 +3,11 @@ package com.guanchedata.infrastructure.adapters.apiservices;
 import com.guanchedata.infrastructure.adapters.activemq.ActiveMQBookIngestedNotifier;
 import com.guanchedata.infrastructure.adapters.bookprovider.GutenbergConnection;
 import com.guanchedata.infrastructure.adapters.bookprovider.GutenbergFetch;
+import com.guanchedata.infrastructure.adapters.hazelcast.HazelcastReplicationManager;
 import com.guanchedata.infrastructure.ports.BookDownloadStatusStore;
 import com.guanchedata.infrastructure.ports.BookDownloader;
 import com.guanchedata.infrastructure.ports.BookStorage;
+import com.guanchedata.util.GutenbergBookDownloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,11 +19,15 @@ public class IngestBookService implements BookDownloader {
     private final BookDownloadStatusStore bookDownloadLog;
     private final BookStorage storageDate;
     private final ActiveMQBookIngestedNotifier bookIngestedNotifier;
+    private final HazelcastReplicationManager hazelcastReplicationManager;
+    private final GutenbergBookDownloader gutenbergBookDownloader;
 
-    public IngestBookService(BookStorage storageDate, BookDownloadStatusStore bookDownloadLog, ActiveMQBookIngestedNotifier bookIngestedNotifier) {
+    public IngestBookService(BookStorage storageDate, BookDownloadStatusStore bookDownloadLog, ActiveMQBookIngestedNotifier bookIngestedNotifier, HazelcastReplicationManager hazelcastReplicationManager, GutenbergBookDownloader gutenbergBookDownloader) {
         this.storageDate = storageDate;
         this.bookDownloadLog = bookDownloadLog;
         this.bookIngestedNotifier = bookIngestedNotifier;
+        this.hazelcastReplicationManager = hazelcastReplicationManager;
+        this.gutenbergBookDownloader = gutenbergBookDownloader;
     }
 
     @Override
@@ -32,8 +38,9 @@ public class IngestBookService implements BookDownloader {
             if (bookDownloadLog.isDownloaded(bookId)) {
                 return alreadyDownloadedResponse(bookId);
             }
-            String response = fetchBook(bookId);
+            String response = this.gutenbergBookDownloader.fetchBook(bookId);
             Path savedPath = storageDate.save(bookId, response);
+            this.hazelcastReplicationManager.getHazelcastReplicationExecuter().execute(bookId);
             bookDownloadLog.registerDownload(bookId);
             this.bookIngestedNotifier.notify(bookId);
             return successResponse(bookId, savedPath);
@@ -44,11 +51,11 @@ public class IngestBookService implements BookDownloader {
         }
     }
 
-    private String fetchBook(int bookId) throws Exception {
-        GutenbergConnection connection = new GutenbergConnection();
-        GutenbergFetch fetch = new GutenbergFetch();
-        return fetch.fetchBook(connection.createConnection(bookId));
-    }
+//    public String fetchBook(int bookId) throws Exception {
+//        GutenbergConnection connection = new GutenbergConnection();
+//        GutenbergFetch fetch = new GutenbergFetch();
+//        return fetch.fetchBook(connection.createConnection(bookId));
+//    }
 
 
     private Map<String, Object> alreadyDownloadedResponse(int bookId) {

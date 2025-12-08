@@ -11,21 +11,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class HazelcastDatalakeRecovery {
+public class DatalakeRecoveryNotifier {
 
     private final HazelcastInstance hazelcast;
     private final NodeInfoProvider nodeInfoProvider;
     private final ActiveMQBookIngestedNotifier notifier;
 
-    public HazelcastDatalakeRecovery(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider, ActiveMQBookIngestedNotifier notifier) {
+    public DatalakeRecoveryNotifier(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider, ActiveMQBookIngestedNotifier notifier) {
         this.hazelcast = hazelcast;
         this.nodeInfoProvider = nodeInfoProvider;
         this.notifier = notifier;
     }
 
-    public void reloadMemoryFromDisk(String dataVolumePath) throws IOException {
+    public void reloadDatalakeFromDisk(String dataVolumePath) throws IOException {
         Path datalakePath = Paths.get(dataVolumePath);
-        MultiMap<Integer, ReplicatedBook> datalake = hazelcast.getMultiMap("datalake");
+
+        MultiMap<Integer, NodeInfoProvider> bookLocations = hazelcast.getMultiMap("bookLocations");
 
         if (!Files.exists(datalakePath) || !Files.isDirectory(datalakePath)) {
             throw new IOException("Datalake path doesn't exist: " + dataVolumePath);
@@ -34,30 +35,18 @@ public class HazelcastDatalakeRecovery {
         Files.walk(datalakePath)
                 .filter(path -> path.getFileName().toString().endsWith("_body.txt"))
                 .forEach(bodyPath -> {
+                    int bookId = extractBookId(bodyPath.getFileName().toString());
+
+                    FencedLock lock = hazelcast.getCPSubsystem().getLock("lock:book:" + bookId);
+                    lock.lock();
                     try {
-                        int bookId = extractBookId(bodyPath.getFileName().toString());
+                        bookLocations.put(bookId, this.nodeInfoProvider);
+                    } finally {
+                        lock.unlock();
+                    }
 
-                        if (datalake.containsKey(bookId)) {
-                            System.out.println("Book " + bookId + " already in the in-memory datalake. Skip.");
-                            return;
-                        }
-
-                        FencedLock lock = hazelcast.getCPSubsystem().getLock("lock:book:" + bookId);
-                        lock.lock();
-                        try {
-                            Path headerPath = bodyPath.getParent().resolve(bookId + "_header.txt");
-                            String header = Files.readString(headerPath);
-                            String body = Files.readString(bodyPath);
-                            datalake.put(bookId, new ReplicatedBook(header, body, nodeInfoProvider.getNodeId()));
-
-                        } finally {
-                            lock.unlock();
-                        }
-
+                    if (bookLocations.get(bookId).size() == 1) {
                         notifier.notify(bookId);
-
-                    } catch (IOException e) {
-                        throw new RuntimeException("Error reading from disk: " + bodyPath, e);
                     }
                 });
     }
