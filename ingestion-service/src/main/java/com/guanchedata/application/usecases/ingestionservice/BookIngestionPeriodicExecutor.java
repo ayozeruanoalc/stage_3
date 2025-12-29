@@ -1,10 +1,12 @@
 package com.guanchedata.application.usecases.ingestionservice;
 
 import com.guanchedata.infrastructure.ports.BookDownloader;
+import com.guanchedata.model.BookContent;
 import com.guanchedata.model.NodeInfoProvider;
 import com.hazelcast.cluster.Member;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +36,7 @@ public class BookIngestionPeriodicExecutor {
     public void execute() {
         System.out.print("Indexers alive: ");
         System.out.println(this.hazelcast.getCluster().getMembers().stream().filter(m -> "indexer".equals(m.getAttribute("role"))).count());
-        MultiMap<Integer,String> datalake = this.hazelcast.getMultiMap("datalake");
+        IMap<Integer, BookContent> datalake = this.hazelcast.getMap("datalake");
         if (datalake.keySet().size() < Integer.parseInt(System.getenv("INDEXING_BUFFER_FACTOR")) * this.hazelcast.getCluster().getMembers().stream().filter(m -> "indexer".equals(m.getAttribute("role"))).count()){
             try {
                 Integer bookId = queue.poll(100, TimeUnit.MILLISECONDS);

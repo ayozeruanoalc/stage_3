@@ -2,7 +2,7 @@ package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.adapters.bookprovider.BookStorageDate;
 import com.guanchedata.model.NodeInfoProvider;
-import com.guanchedata.model.ReplicatedBook;
+import com.guanchedata.model.BookReplicationCommand;
 import com.guanchedata.util.GutenbergBookProvider;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.collection.ItemEvent;
@@ -29,20 +29,20 @@ public class HazelcastDatalakeListener {
     }
 
     public void registerListener() {
-        IQueue<ReplicatedBook> booksToBeReplicated = hazelcast.getQueue("booksToBeReplicated");
+        IQueue<BookReplicationCommand> booksToBeReplicated = hazelcast.getQueue("booksToBeReplicated");
 
-        booksToBeReplicated.addItemListener(new ItemListener<ReplicatedBook>() {
+        booksToBeReplicated.addItemListener(new ItemListener<BookReplicationCommand>() {
             @Override
-            public void itemAdded(ItemEvent<ReplicatedBook> itemEvent) {
+            public void itemAdded(ItemEvent<BookReplicationCommand> itemEvent) {
                 processBook(itemEvent.getItem());
             }
 
             @Override
-            public void itemRemoved(ItemEvent<ReplicatedBook> itemEvent) {}
+            public void itemRemoved(ItemEvent<BookReplicationCommand> itemEvent) {}
         }, true);
     }
 
-    private void processBook(ReplicatedBook replicated) {
+    private void processBook(BookReplicationCommand replicated) {
         if (replicated.getSourceNode().equals(nodeInfoProvider.getNodeId())) return;
         IMap<Integer,Integer> replicationLog = hazelcast.getMap("replicationLog");
         saveRetrievedBook(replicated.getId());

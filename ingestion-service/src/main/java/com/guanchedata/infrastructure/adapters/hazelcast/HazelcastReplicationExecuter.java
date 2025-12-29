@@ -2,10 +2,9 @@ package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.ports.ReplicationExecuter;
 import com.guanchedata.model.NodeInfoProvider;
-import com.guanchedata.model.ReplicatedBook;
+import com.guanchedata.model.BookReplicationCommand;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.cp.lock.FencedLock;
 import com.hazelcast.multimap.MultiMap;
 
 import java.util.List;
@@ -31,13 +30,13 @@ public class HazelcastReplicationExecuter implements ReplicationExecuter {
     public void replicate(int bookId) {
         //FencedLock lock = hazelcast.getCPSubsystem().getLock("lock:book:" + bookId);
         //lock.lock();
-        IQueue<ReplicatedBook> booksToBeReplicated = hazelcast.getQueue("booksToBeReplicated");
+        IQueue<BookReplicationCommand> booksToBeReplicated = hazelcast.getQueue("booksToBeReplicated");
         try {
             for (int i = 1; i < replicationFactor; i++) {
-                booksToBeReplicated.put(new ReplicatedBook(bookId, this.nodeInfoProvider.getNodeId()));
+                booksToBeReplicated.put(new BookReplicationCommand(bookId, this.nodeInfoProvider.getNodeId()));
             }
-            List<ReplicatedBook> snapshot = List.copyOf(booksToBeReplicated);
-            for (ReplicatedBook book: snapshot){
+            List<BookReplicationCommand> snapshot = List.copyOf(booksToBeReplicated);
+            for (BookReplicationCommand book: snapshot){
                 System.out.println(book.getId());
             }
         } catch (InterruptedException e) {

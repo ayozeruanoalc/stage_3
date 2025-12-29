@@ -2,7 +2,6 @@ package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.adapters.activemq.ActiveMQBookIngestedNotifier;
 import com.guanchedata.model.NodeInfoProvider;
-import com.guanchedata.model.ReplicatedBook;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.cp.lock.FencedLock;
 import com.hazelcast.multimap.MultiMap;

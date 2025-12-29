@@ -1,9 +1,11 @@
 package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.adapters.bookprovider.BookStorageDate;
+import com.guanchedata.model.BookContent;
 import com.guanchedata.model.NodeInfoProvider;
 import com.guanchedata.util.GutenbergBookProvider;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
 
 public class HazelcastManager {
@@ -24,9 +26,8 @@ public class HazelcastManager {
     public void uploadToMemory(int bookId, String[] contentSeparated) {
         String header = contentSeparated[0];
         String body = contentSeparated[1];
-        MultiMap<Integer,String> datalake = this.hazelcastInstance.getMultiMap("datalake");
-        datalake.put(bookId, header);
-        datalake.put(bookId, body);
+        IMap<Integer,BookContent> datalake = this.hazelcastInstance.getMap("datalake");
+        datalake.put(bookId, new BookContent(header,body));
     }
 
     public HazelcastInstance getHazelcastInstance() {

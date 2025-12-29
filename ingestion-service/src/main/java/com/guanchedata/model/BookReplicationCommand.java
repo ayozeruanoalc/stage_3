@@ -2,11 +2,11 @@ package com.guanchedata.model;
 
 import java.io.Serializable;
 
-public class ReplicatedBook implements Serializable {
+public class BookReplicationCommand implements Serializable {
     private final int id;
     private final String sourceNode;
 
-    public ReplicatedBook(int id, String sourceNode) {
+    public BookReplicationCommand(int id, String sourceNode) {
         this.id = id;
         this.sourceNode = sourceNode;
     }

@@ -61,13 +61,6 @@ public class Main {
         app.post("/index/document/{documentId}", controller::indexDocument);
         app.get("/search", controller::search);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            log.info("Shutting down Indexing Service");
-            messageConsumer.stopConsuming();
-            app.stop();
-            hazelcastInstance.shutdown();
-        }));
-
-        log.info("Indexing Service running on port {}", config.getPort());
+        log.info("Indexing Service running on port {}\n", config.getPort());
     }
 }
