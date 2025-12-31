@@ -1,6 +1,5 @@
-package com.guanchedata.application.usecases.searchservice;
+package com.guanchedata.infrastructure.adapters.apiservices;
 
-import com.guanchedata.infrastructure.adapters.apiservices.SearchService;
 import io.javalin.http.Context;
 
 import java.util.HashMap;

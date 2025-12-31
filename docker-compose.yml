@@ -54,6 +54,24 @@ services:
 #    networks:
 #      - search_net
 
+  search1:
+    build:
+      context: ./search-service
+    image: search-service:latest
+    container_name: search1
+    ports:
+      - "5703:5703"
+      - "7003:7003"
+    environment:
+      PUBLIC_IP: "" #IP
+      HZ_PORT: "5703"
+      SERVICE_PORT: "7003"
+      CLUSTER_NAME: SearchEngine
+    depends_on:
+      - indexing1
+    networks:
+      - search_net
+
   activemq:
     image: rmohr/activemq:latest
     container_name: activemq

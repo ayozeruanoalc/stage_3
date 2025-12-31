@@ -1,65 +1,141 @@
 package com.guanchedata.infrastructure.adapters.apiservices;
 
-import com.guanchedata.infrastructure.ports.BookSearchProvider;
-import com.guanchedata.infrastructure.ports.InvertedIndexProvider;
-import com.guanchedata.infrastructure.ports.MetadataProvider;
-import com.guanchedata.infrastructure.ports.ResultsSorter;
-import org.bson.Document;
+import com.guanchedata.infrastructure.ports.IndexStore;
+import com.guanchedata.infrastructure.ports.MetadataStore;
+import com.guanchedata.model.BookMetadata;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.logging.Logger;
 
-public class SearchService implements BookSearchProvider {
-    private final InvertedIndexProvider invertedIndexConnector;
-    private final MetadataProvider metadataConnector;
-    private final ResultsSorter resultsSorter;
+public class SearchService {
+    private static final Logger log = Logger.getLogger(SearchService.class.getName());
 
-    public SearchService(InvertedIndexProvider invertedIndexConnector, MetadataProvider metadataConnector, ResultsSorter resultsSorter) {
-        this.metadataConnector = metadataConnector;
-        this.invertedIndexConnector = invertedIndexConnector;
-        this.resultsSorter = resultsSorter;
+    private final IndexStore indexStore;
+    private final MetadataStore metadataStore;
+
+    public SearchService(IndexStore indexStore, MetadataStore metadataStore) {
+        this.indexStore = indexStore;
+        this.metadataStore = metadataStore;
     }
 
-    public Map<Integer, Integer> getFrequencies(Document document) {
-        Map<Integer, Integer> frequencies = new HashMap<>();
-        for (String key : document.keySet()) {
-            Document subDocument = (Document) document.get(key);
-            Integer frequency = subDocument.getInteger("frequency");
-            frequencies.put(Integer.parseInt(key), frequency);
+    public List<SearchResult> search(String query, String author, String language, Integer year) {
+        long startTime = System.currentTimeMillis();
+
+        Set<String> contentResults = searchByContent(query);
+        Set<String> finalResults = filterByMetadata(contentResults, author, language, year);
+        List<SearchResult> enrichedResults = enrichWithMetadata(finalResults);
+
+        long duration = System.currentTimeMillis() - startTime;
+        log.info(String.format("Search: query='%s', author='%s', language='%s', year=%s, results=%d, time=%dms",
+                query, author, language, year, enrichedResults.size(), duration));
+
+        return enrichedResults;
+    }
+
+    private Set<String> searchByContent(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptySet();
         }
-        return frequencies;
-    }
 
-    public Document getDocByWord(String word) {
-        Document wordDocument = invertedIndexConnector.getDocuments(word.toLowerCase());
-        if (wordDocument == null) return null;
-        return (Document) wordDocument.get("documents");
-    }
+        String[] terms = query.toLowerCase()
+                .replaceAll("[^a-z0-9\\s]", " ")
+                .trim()
+                .split("\\s+");
 
-    public List<Integer> getBooksContainsWord(String word){
-        Document docs = getDocByWord(word);
-        return docs.keySet().stream()
-                .map(Integer::parseInt)
-                .collect(Collectors.toList());
-    }
+        Set<String> results = new HashSet<>();
 
-    public List<Map<String, Object>> search(String word, Map<String, Object> filters) {
-        Document docs = getDocByWord(word);
-        if (docs == null) return Collections.emptyList();
+        for (String term : terms) {
+            if (term.isEmpty()) continue;
 
-        List<Integer> docsIds = getBooksContainsWord(word);
+            Set<String> documentsForTerm = indexStore.getDocuments(term);
 
-        Map<Integer, Integer> frequencies = getFrequencies(docs);
-
-        List<Map<String, Object>> results = metadataConnector.findMetadata(docsIds, filters);
-
-        results.forEach(map -> map.put("frequency", frequencies.get(map.get("id"))));
-
-        resultsSorter.sort(results);
+            if (results.isEmpty()) {
+                results.addAll(documentsForTerm);
+            } else {
+                results.retainAll(documentsForTerm);
+            }
+        }
 
         return results;
+    }
+
+    private Set<String> filterByMetadata(Set<String> documentIds, String author, String language, Integer year) {
+        if ((author == null || author.trim().isEmpty()) &&
+                (language == null || language.trim().isEmpty()) &&
+                year == null) {
+            return documentIds;
+        }
+
+        Set<String> filtered = new HashSet<>();
+
+        for (String docId : documentIds) {
+            BookMetadata metadata = metadataStore.getMetadata(docId);
+
+            if (metadata == null) continue;
+
+            boolean matches = true;
+
+            if (author != null && !author.trim().isEmpty()) {
+                matches = metadata.getAuthor() != null &&
+                        metadata.getAuthor().toLowerCase().contains(author.toLowerCase());
+            }
+
+            if (matches && language != null && !language.trim().isEmpty()) {
+                matches = metadata.getLanguage() != null &&
+                        metadata.getLanguage().toLowerCase().contains(language.toLowerCase());
+            }
+
+            if (matches && year != null) {
+                matches = metadata.getYear() == year;
+            }
+
+            if (matches) {
+                filtered.add(docId);
+            }
+        }
+
+        return filtered;
+    }
+
+    private List<SearchResult> enrichWithMetadata(Set<String> documentIds) {
+        List<SearchResult> results = new ArrayList<>();
+
+        for (String docId : documentIds) {
+            BookMetadata metadata = metadataStore.getMetadata(docId);
+
+            SearchResult result = new SearchResult(
+                    docId,
+                    metadata != null ? metadata.getTitle() : "Unknown",
+                    metadata != null ? metadata.getAuthor() : "Unknown",
+                    metadata != null ? metadata.getLanguage() : "Unknown",
+                    metadata != null ? metadata.getYear() : 0
+            );
+
+            results.add(result);
+        }
+
+        return results;
+    }
+
+    public static class SearchResult {
+        private final String id;
+        private final String title;
+        private final String author;
+        private final String language;
+        private final int year;
+
+        public SearchResult(String id, String title, String author, String language, int year) {
+            this.id = id;
+            this.title = title;
+            this.author = author;
+            this.language = language;
+            this.year = year;
+        }
+
+        public String getId() { return id; }
+        public String getTitle() { return title; }
+        public String getAuthor() { return author; }
+        public String getLanguage() { return language; }
+        public int getYear() { return year; }
     }
 }

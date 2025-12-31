@@ -1,43 +1,55 @@
 package com.guanchedata;
 
+import com.google.gson.Gson;
 import com.guanchedata.application.usecases.searchservice.SearchController;
 import com.guanchedata.infrastructure.adapters.apiservices.SearchService;
-import com.guanchedata.infrastructure.adapters.provider.metadata.SQLiteConnector;
-import com.guanchedata.infrastructure.ports.BookSearchProvider;
-import com.guanchedata.infrastructure.ports.InvertedIndexProvider;
-import com.guanchedata.infrastructure.ports.MetadataProvider;
-import com.guanchedata.infrastructure.ports.ResultsSorter;
-import com.guanchedata.util.ResultsSorterByFreq;
-import com.guanchedata.util.ResultsSorterById;
+import com.guanchedata.infrastructure.adapters.indexstore.HazelcastIndexStore;
+import com.guanchedata.infrastructure.adapters.metadata.HazelcastMetadataStore;
+import com.guanchedata.infrastructure.config.HazelcastConfig;
+import com.guanchedata.infrastructure.config.ServiceConfig;
+import com.hazelcast.core.HazelcastInstance;
 import io.javalin.Javalin;
-import io.javalin.json.JavalinGson;
+import io.javalin.json.JsonMapper;
 
+import java.lang.reflect.Type;
+import java.util.logging.Logger;
 
 public class Main {
+    private static final Logger log = Logger.getLogger(Main.class.getName());
+
     public static void main(String[] args) {
-        MetadataProvider metadataConnector = new SQLiteConnector(args[0]);
-        InvertedIndexProvider invertedIndexConnector = new MongoDBConnector(args[1], args[2], args[3]);
+        log.info("Starting Search Service");
 
+        ServiceConfig config = new ServiceConfig();
+        HazelcastConfig hzConfig = new HazelcastConfig();
 
-        ResultsSorter resultsSorter = null;
-        if(args[4].equalsIgnoreCase("id")){
-            resultsSorter = new ResultsSorterById();
-        } else if(args[4].equalsIgnoreCase("frequency")){
-            resultsSorter = new ResultsSorterByFreq();
-        } else {
-            System.err.println("Sorter method must be either 'id' or 'frequency'");
-        }
+        HazelcastInstance hazelcastInstance = hzConfig.initHazelcast(config.getClusterName());
 
-        BookSearchProvider searchService = new SearchService(invertedIndexConnector, metadataConnector,  resultsSorter);
+        HazelcastIndexStore indexStore = new HazelcastIndexStore(hazelcastInstance);
+        HazelcastMetadataStore metadataStore = new HazelcastMetadataStore(hazelcastInstance);  // ← Sin parser
+
+        SearchService searchService = new SearchService(indexStore, metadataStore);
         SearchController searchController = new SearchController(searchService);
 
-        Javalin app = Javalin.create(config -> {
-            config.http.defaultContentType = "application/json";
-            config.jsonMapper(new JavalinGson());
-        }).start(7003);
+        Gson gson = new Gson();
 
-        app.get("/search", searchController::getSearch);
+        Javalin app = Javalin.create(javalinConfig -> {
+            javalinConfig.jsonMapper(new JsonMapper() {
+                @Override
+                public String toJsonString(Object obj, Type type) {
+                    return gson.toJson(obj, type);
+                }
 
-        System.out.println("API running in port 7003");
+                @Override
+                public <T> T fromJsonString(String json, Type targetType) {
+                    return gson.fromJson(json, targetType);
+                }
+            });
+        }).start(config.getServicePort());
+
+        app.get("/search", searchController::search);
+        app.get("/health", searchController::health);
+
+        log.info("Search Service running on port " + config.getServicePort());
     }
 }
