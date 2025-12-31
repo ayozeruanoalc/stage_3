@@ -39,8 +39,8 @@ public class Main {
                 bookStatusService
         );
 
-        DatalakeRecoveryNotifier recovery = new DatalakeRecoveryNotifier(hazelcastManager.getHazelcastInstance(), hazelcastManager.getNodeInfoProvider(), notifier);
-        recovery.reloadDatalakeFromDisk(args[0]);
+//        DatalakeRecoveryNotifier recovery = new DatalakeRecoveryNotifier(hazelcastManager.getHazelcastInstance(), hazelcastManager.getNodeInfoProvider(), notifier);
+//        recovery.reloadDatalakeFromDisk(args[0]);
         ////////
         BookIngestionPeriodicExecutor bookIngestionExecutor = new BookIngestionPeriodicExecutor(hazelcastManager.getHazelcastInstance(),ingestBookService);
 
@@ -48,7 +48,7 @@ public class Main {
             config.http.defaultContentType = "application/json";
         }).start(7001);
 
-        bookIngestionExecutor.setupBookQueue();
+        // bookIngestionExecutor.setupBookQueue();
         bookIngestionExecutor.startPeriodicExecution();
 
         app.post("/ingest/{book_id}", controller::ingestBook);

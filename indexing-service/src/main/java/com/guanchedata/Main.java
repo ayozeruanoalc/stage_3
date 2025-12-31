@@ -7,6 +7,9 @@ import com.guanchedata.infrastructure.adapters.bookstore.HazelcastBookStore;
 import com.guanchedata.infrastructure.adapters.indexstore.HazelcastIndexStore;
 import com.guanchedata.infrastructure.adapters.metadata.HazelcastMetadataStore;
 import com.guanchedata.infrastructure.adapters.metadata.MetadataParser;
+import com.guanchedata.infrastructure.adapters.recovery.IngestionQueueManager;
+import com.guanchedata.infrastructure.adapters.recovery.InvertedIndexRecovery;
+import com.guanchedata.infrastructure.adapters.recovery.ReindexingExecutor;
 import com.guanchedata.infrastructure.adapters.tokenizer.TextTokenizer;
 import com.guanchedata.infrastructure.config.HazelcastConfig;
 import com.guanchedata.infrastructure.config.MessageBrokerConfig;
@@ -39,10 +42,18 @@ public class Main {
 
         IndexingService indexingService = new IndexingService(indexStore, tokenizer, bookStore, hazelcastMetadataStore);
         SearchService searchService = new SearchService(indexStore);
-        IndexingController controller = new IndexingController(indexingService, searchService);
+
 
         MessageBrokerConfig brokerConfig = new MessageBrokerConfig();
         MessageConsumer messageConsumer = brokerConfig.createConsumer(config.getBrokerUrl(), indexingService);
+
+        // ------------------------
+
+        InvertedIndexRecovery invertedIndexRecovery = new InvertedIndexRecovery(args[0], hazelcastInstance, indexingService);
+        IngestionQueueManager ingestionQueueManager = new IngestionQueueManager(hazelcastInstance);
+        ReindexingExecutor reindexingExecutor = new ReindexingExecutor(invertedIndexRecovery, hazelcastInstance, ingestionQueueManager);
+
+        IndexingController controller = new IndexingController(indexingService, reindexingExecutor);
 
         Gson gson = new Gson();
 
@@ -61,8 +72,10 @@ public class Main {
             cfg.http.defaultContentType = "application/json";
         }).start(config.getPort());
 
+        reindexingExecutor.executeRecovery();
+
         app.post("/index/document/{documentId}", controller::indexDocument);
-        app.get("/search", controller::search);
+        app.post("/index/rebuild", controller::rebuild);
 
         log.info("Indexing Service running on port {}\n", config.getPort());
     }
