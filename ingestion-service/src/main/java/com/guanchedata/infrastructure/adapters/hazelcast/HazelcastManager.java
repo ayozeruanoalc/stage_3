@@ -16,7 +16,7 @@ public class HazelcastManager {
     HazelcastReplicationExecuter hazelcastReplicationExecuter;
 
     public HazelcastManager(String clusterName, int replicationFactor, GutenbergBookProvider gutenbergBookDownloader, BookStorageDate bookStorageDate) {
-        this.nodeInfoProvider = new NodeInfoProvider(System.getenv("PUBLIC_IP")); // NODE IDENTIFIER
+        this.nodeInfoProvider = new NodeInfoProvider(System.getenv("HZ_PUBLIC_ADDRESS")); // NODE IDENTIFIER
         this.hazelcastInstance = new HazelcastConfig().initHazelcast(clusterName); // CREATE HAZELCAST MEMBER
         this.hazelcastDatalakeListener = new HazelcastDatalakeListener(this.hazelcastInstance, this.nodeInfoProvider, gutenbergBookDownloader, bookStorageDate);
         this.hazelcastDatalakeListener.registerListener();

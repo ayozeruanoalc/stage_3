@@ -8,12 +8,14 @@ services:
       - "5701:5701"
     command: ['datalake', 'logs/log.log']
     environment:
-      PUBLIC_IP: "" # IP
+      #PUBLIC_IP: "" # IP
       HZ_PORT: "5701"
+      HZ_PUBLIC_ADDRESS: xxx:5701
+      HZ_MEMBERS: xxx:5701
+      HAZELCAST_CLUSTER_NAME: SearchEngine
+      BROKER_URL: tcp://xxx:61616
       REPLICATION_FACTOR: 3
       INDEXING_BUFFER_FACTOR: 10
-      BROKER_URL: tcp://XXX:61616
-      HAZELCAST_CLUSTER_NAME: SearchEngine
     volumes:
       - ./mnt/datalake:/app/datalake
       - ./mnt/logs:/app/logs
@@ -29,10 +31,12 @@ services:
       - "5702:5702"
     command: ['datalake']
     environment:
-      PUBLIC_IP: "" # IP
+      #PUBLIC_IP: "" # IP
       HZ_PORT: "5702"
-      BROKER_URL: tcp://XXX:61616
+      HZ_PUBLIC_ADDRESS: xxx:5702
+      HZ_MEMBERS: xxx:5701
       HAZELCAST_CLUSTER_NAME: SearchEngine
+      BROKER_URL: tcp://xxx:61616
     volumes:
       - ./mnt/datalake:/app/datalake
     depends_on:

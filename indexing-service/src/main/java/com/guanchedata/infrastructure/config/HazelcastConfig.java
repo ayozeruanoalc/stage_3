@@ -23,23 +23,27 @@ public class HazelcastConfig {
                 .setAsyncBackupCount(1);
         config.addMapConfig(mapCfg);
 
-        String publicIp = System.getenv("PUBLIC_IP");
-        String hzPort   = System.getenv("HZ_PORT");
-
         NetworkConfig networkConfig = config.getNetworkConfig();
-
-        networkConfig.setPort(Integer.parseInt(hzPort));
+        networkConfig.setPort(Integer.parseInt(System.getenv("HZ_PORT")));
         networkConfig.setPortAutoIncrement(false);
-        networkConfig.setPublicAddress(publicIp + ":" + hzPort);
+        config.setProperty("hazelcast.wait.seconds.before.join", "0");
 
-        JoinConfig join = networkConfig.getJoin();
+        JoinConfig join = config.getNetworkConfig().getJoin();
         join.getMulticastConfig().setEnabled(false);
         join.getAutoDetectionConfig().setEnabled(false);
-        join.getTcpIpConfig()
-                //.setMembers(Arrays.asList())
-                .setEnabled(true);
 
-        config.setProperty("hazelcast.wait.seconds.before.join", "0");
+        String publicAddr = System.getenv("HZ_PUBLIC_ADDRESS");
+        if (publicAddr != null && !publicAddr.isBlank()) {
+            networkConfig.setPublicAddress(publicAddr);
+        }
+
+        String members = System.getenv("HZ_MEMBERS");
+        if (members != null && !members.isBlank()) {
+            join.getTcpIpConfig().setEnabled(true);
+            for (String m : members.split(",")) {
+                join.getTcpIpConfig().addMember(m.trim());
+            }
+        }
 
         return Hazelcast.newHazelcastInstance(config);
     }
