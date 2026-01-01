@@ -12,8 +12,7 @@ import java.util.function.Consumer;
 
 public class ActiveMQMessageConsumer implements MessageConsumer {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(ActiveMQMessageConsumer.class);
+    private static final Logger log = LoggerFactory.getLogger(ActiveMQMessageConsumer.class);
 
     private final String brokerUrl;
     private final String queueName;
@@ -30,60 +29,63 @@ public class ActiveMQMessageConsumer implements MessageConsumer {
 
     @Override
     public void startConsuming(Consumer<String> messageHandler) {
-        try {
-            ConnectionFactory factory =
-                    new ActiveMQConnectionFactory(brokerUrl);
+        int attempt = 0;
 
-            connection = factory.createConnection();
-            connection.start();
+        while (true) {
+            try {
+                attempt++;
+                log.info("Starting ActiveMQ consumer (attempt {})...", attempt);
 
-            session = connection.createSession(
-                    false,
-                    Session.AUTO_ACKNOWLEDGE
-            );
+                ConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
+                connection = factory.createConnection();
+                connection.start();
 
-            Destination queue = session.createQueue(queueName);
-            consumer = session.createConsumer(queue);
+                session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                Destination queue = session.createQueue(queueName);
+                consumer = session.createConsumer(queue);
 
-            consumer.setMessageListener(message -> {
-                try {
-                    if (message instanceof TextMessage textMessage) {
-                        String text = textMessage.getText();
-                        String bookId = extractBookId(text);
-                        messageHandler.accept(bookId);
+                consumer.setMessageListener(message -> {
+                    try {
+                        if (message instanceof TextMessage textMessage) {
+                            String text = textMessage.getText();
+                            String bookId = extractBookId(text);
+                            messageHandler.accept(bookId);
+                        }
+                    } catch (JMSException e) {
+                        log.error("Error processing message", e);
                     }
-                } catch (JMSException e) {
-                    log.error("Error processing message", e);
-                }
-            });
+                });
 
-            log.info(
-                    "ActiveMQ consumer started on queue: {}",
-                    queueName
-            );
+                log.info("ActiveMQ consumer started on queue: {}", queueName);
+                return;
 
-        } catch (JMSException e) {
-            log.error("Error starting ActiveMQ consumer", e);
-            throw new RuntimeException(
-                    "Failed to start message consumer",
-                    e
-            );
+            } catch (JMSException e) {
+                log.warn("ActiveMQ not ready yet, retrying in 3s...", e);
+                cleanup();
+                sleep(3000);
+            }
         }
     }
 
-    @Override
-    public void stopConsuming() {}
+    private void cleanup() {
+        try { if (consumer != null) consumer.close(); } catch (Exception ignored) {}
+        try { if (session != null) session.close(); } catch (Exception ignored) {}
+        try { if (connection != null) connection.close(); } catch (Exception ignored) {}
+    }
+
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ignored) {}
+    }
+
 
     private String extractBookId(String jsonMessage) {
         try {
-            JsonObject json =
-                    gson.fromJson(jsonMessage, JsonObject.class);
+            JsonObject json = gson.fromJson(jsonMessage, JsonObject.class);
             return json.get("bookId").getAsString();
         } catch (Exception e) {
-            log.warn(
-                    "Failed to parse JSON, using raw message: {}",
-                    jsonMessage
-            );
+            log.warn("Failed to parse JSON, using raw message: {}", jsonMessage);
             return jsonMessage;
         }
     }
