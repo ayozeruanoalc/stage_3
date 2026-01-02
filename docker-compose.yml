@@ -8,11 +8,11 @@ services:
       - "5701:5701"
     command: ['datalake', 'logs/log.log']
     environment:
-      PUBLIC_IP: "" #IP
+      PUBLIC_IP: "192.168.1.41" #IP
       HZ_PORT: "5701"
       REPLICATION_FACTOR: 3
       INDEXING_BUFFER_FACTOR: 10
-      BROKER_URL: tcp://xxx:61616
+      BROKER_URL: tcp://192.168.1.41:61616
       HAZELCAST_CLUSTER_NAME: SearchEngine
     volumes:
       - ./mnt/datalake:/app/datalake
@@ -28,9 +28,9 @@ services:
     ports:
       - "5702:5702"
     environment:
-      PUBLIC_IP: "" #IP
+      PUBLIC_IP: "192.168.1.41" #IP
       HZ_PORT: "5702"
-      BROKER_URL: tcp://xxx:61616
+      BROKER_URL: tcp://192.168.1.41:61616
       HAZELCAST_CLUSTER_NAME: SearchEngine
     depends_on:
       - ingestion1
@@ -63,10 +63,11 @@ services:
       - "5703:5703"
       - "7003:7003"
     environment:
-      PUBLIC_IP: "" #IP
+      PUBLIC_IP: "192.168.1.41" #IP
       HZ_PORT: "5703"
       SERVICE_PORT: "7003"
       CLUSTER_NAME: SearchEngine
+      SORTING_CRITERIA: "frequency" #frequency or id
     depends_on:
       - indexing1
     networks:
