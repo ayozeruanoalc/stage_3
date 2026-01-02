@@ -11,7 +11,7 @@ import java.util.*;
 public class HazelcastIndexStore implements IndexStore {
     private static final Logger log = LoggerFactory.getLogger(HazelcastIndexStore.class);
     private final MultiMap<String, String> invertedIndex;
-    private final Map<String, String> invertedIndexEntry;
+    private final Map<String, Set<String>> invertedIndexEntry;
 
     public HazelcastIndexStore(HazelcastInstance hazelcastInstance) {
         this.invertedIndex = hazelcastInstance.getMultiMap("inverted-index");
@@ -21,12 +21,21 @@ public class HazelcastIndexStore implements IndexStore {
 
     @Override
     public void addEntry(String term, String documentId) {
-        invertedIndexEntry.put(term, documentId);
+        invertedIndexEntry.
+                computeIfAbsent(term, k -> new HashSet<>())
+                        .add(documentId);
     }
 
     @Override
     public void pushEntries() {
-        invertedIndex.putAllAsync(invertedIndexEntry.keySet().toString(), invertedIndexEntry.values());
+        for (Map.Entry<String, Set<String>> entry: invertedIndexEntry.entrySet()) {
+            String term = entry.getKey();
+            for (String value : entry.getValue()) {
+                invertedIndex.put(term, value);
+            }
+
+        }
+        invertedIndexEntry.clear();
     }
 
     @Override
