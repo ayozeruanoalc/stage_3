@@ -58,6 +58,8 @@ public class IndexingService {
             indexStore.addEntry(term, String.valueOf(documentId) + ":" + frequency);
         }
 
+        indexStore.pushEntries();
+
         return tokens.size();
     }
 }

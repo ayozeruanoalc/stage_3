@@ -4,6 +4,9 @@ import java.util.Set;
 
 public interface IndexStore {
     void addEntry(String term, String documentId);
+
+    void pushEntries();
+
     Set<String> getDocuments(String term);
     void clear();
 }

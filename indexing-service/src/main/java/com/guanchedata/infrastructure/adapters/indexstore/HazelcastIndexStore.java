@@ -6,22 +6,27 @@ import com.hazelcast.multimap.MultiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class HazelcastIndexStore implements IndexStore {
     private static final Logger log = LoggerFactory.getLogger(HazelcastIndexStore.class);
     private final MultiMap<String, String> invertedIndex;
+    private final Map<String, String> invertedIndexEntry;
 
     public HazelcastIndexStore(HazelcastInstance hazelcastInstance) {
         this.invertedIndex = hazelcastInstance.getMultiMap("inverted-index");
+        this.invertedIndexEntry = new HashMap<>();
         log.info("Hazelcast inverted index initialized");
     }
 
     @Override
     public void addEntry(String term, String documentId) {
-        invertedIndex.put(term, documentId);
+        invertedIndexEntry.put(term, documentId);
+    }
+
+    @Override
+    public void pushEntries() {
+        invertedIndex.putAllAsync(invertedIndexEntry.keySet().toString(), invertedIndexEntry.values());
     }
 
     @Override

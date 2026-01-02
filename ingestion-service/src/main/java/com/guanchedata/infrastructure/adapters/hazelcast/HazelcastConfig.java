@@ -24,7 +24,7 @@ public class HazelcastConfig {
 
         join.getTcpIpConfig()
 
-                .setMembers(Arrays.asList("192.168.1.41:5701", "192.168.1.41:5702",  "192.168.1.41:5703"))
+                .setMembers(Arrays.asList("IPS"))
                 .setEnabled(true);
 
         return Hazelcast.newHazelcastInstance(config);
