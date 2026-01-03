@@ -58,7 +58,6 @@ services:
     build:
       context: ./search-service
     image: search-service:latest
-    container_name: search1
     ports:
       - "5703:5703"
       - "7003:7003"
@@ -99,6 +98,8 @@ services:
       - search1
     networks:
       - search_net
+    profiles:
+      - loadbalancer
 
 networks:
   search_net:
