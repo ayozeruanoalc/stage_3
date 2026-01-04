@@ -15,7 +15,7 @@ public class HazelcastIndexStore implements IndexStore {
     private final Map<String, Set<String>> invertedIndexEntry;
     private final ISet<Integer> indexingRegistry;
 
-    public HazelcastIndexStore(HazelcastInstance hazelcastInstance, ISet<Integer> indexingRegistry) {
+    public HazelcastIndexStore(HazelcastInstance hazelcastInstance) {
         this.invertedIndex = hazelcastInstance.getMultiMap("inverted-index");
         this.invertedIndexEntry = new HashMap<>();
         this.indexingRegistry = hazelcastInstance.getSet("indexingRegistry");

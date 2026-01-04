@@ -55,6 +55,7 @@ public class IndexingController {
                     "message", e.getMessage()
             ));
         }
+    }
 
     public void health(Context ctx) {
         ctx.json(Map.of(

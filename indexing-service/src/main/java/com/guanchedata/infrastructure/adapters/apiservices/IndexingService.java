@@ -3,7 +3,6 @@ package com.guanchedata.infrastructure.adapters.apiservices;
 import com.guanchedata.infrastructure.adapters.metadata.HazelcastMetadataStore;
 import com.guanchedata.infrastructure.ports.BookStore;
 import com.guanchedata.infrastructure.ports.IndexStore;
-import com.guanchedata.infrastructure.ports.MetadataStore;
 import com.guanchedata.infrastructure.ports.Tokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +63,28 @@ public class IndexingService {
         indexStore.pushEntries();
 
         return tokens.size();
+    }
+
+    public void indexLocalDocument(int documentId, String header, String body) {
+        log.info("Starting local indexing for document: {}", documentId);
+        try {
+            indexResolvedDocument(documentId, header, body);
+        } catch (Exception e) {
+            log.error("Error indexing local document {}: {}", documentId, e.getMessage(), e);
+            throw new RuntimeException("Failed to index local document: " + documentId, e);
+        }
+    }
+
+    private void indexResolvedDocument(int documentId, String header, String body) {
+        registerIndexAction(documentId);
+        int tokenCount = generateInvertedIndex(body, documentId);
+        hazelcastMetadataStore.saveMetadata(documentId, header);
+
+        log.info(
+                "Done indexing for document: {}. Token count: {}",
+                documentId,
+                tokenCount
+        );
     }
 
     private void registerIndexAction(int documentId) {

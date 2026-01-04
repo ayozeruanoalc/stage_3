@@ -55,7 +55,7 @@ services:
       #PUBLIC_IP: "" #IP
       HZ_PORT: "5703"
       SERVICE_PORT: "7003"
-      HZ_PUBLIC_ADDRESS: xxx:5702
+      HZ_PUBLIC_ADDRESS: xxx:5703
       HZ_MEMBERS: xxx:5701
       HAZELCAST_CLUSTER_NAME: SearchEngine
       SORTING_CRITERIA: "frequency" #frequency or id
