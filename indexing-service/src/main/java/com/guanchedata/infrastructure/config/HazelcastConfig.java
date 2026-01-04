@@ -7,8 +7,6 @@ import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
-import java.util.Arrays;
-
 public class HazelcastConfig {
 
     public HazelcastInstance initHazelcast(String clusterName) {
@@ -22,6 +20,16 @@ public class HazelcastConfig {
                 .setBackupCount(2)
                 .setAsyncBackupCount(1);
         config.addMapConfig(mapCfg);
+
+        MapConfig mapCfg2 = new MapConfig("bookMetadata")
+                .setBackupCount(2)
+                .setAsyncBackupCount(1);
+        config.addMapConfig(mapCfg2);
+
+        MapConfig mapCfg3 = new MapConfig("datalake")
+                .setBackupCount(2)
+                .setAsyncBackupCount(1);
+        config.addMapConfig(mapCfg3);
 
         NetworkConfig networkConfig = config.getNetworkConfig();
         networkConfig.setPort(Integer.parseInt(System.getenv("HZ_PORT")));

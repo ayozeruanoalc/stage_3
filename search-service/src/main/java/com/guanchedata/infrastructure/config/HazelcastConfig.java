@@ -2,6 +2,7 @@ package com.guanchedata.infrastructure.config;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -12,6 +13,21 @@ public class HazelcastConfig {
 
         Config config = new Config();
         config.setClusterName(clusterName);
+
+        MapConfig mapCfg = new MapConfig("inverted-index")
+                .setBackupCount(2)
+                .setAsyncBackupCount(1);
+        config.addMapConfig(mapCfg);
+
+        MapConfig mapCfg2 = new MapConfig("bookMetadata")
+                .setBackupCount(2)
+                .setAsyncBackupCount(1);
+        config.addMapConfig(mapCfg2);
+
+        MapConfig mapCfg3 = new MapConfig("datalake")
+                .setBackupCount(2)
+                .setAsyncBackupCount(1);
+        config.addMapConfig(mapCfg3);
         //config.getNetworkConfig().setPublicAddress(System.getenv("PUBLIC_IP"));
         //config.getNetworkConfig().setPort(5701);
         NetworkConfig networkConfig = config.getNetworkConfig();
