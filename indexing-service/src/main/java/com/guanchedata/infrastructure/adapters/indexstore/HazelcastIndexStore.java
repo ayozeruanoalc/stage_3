@@ -3,12 +3,12 @@ package com.guanchedata.infrastructure.adapters.indexstore;
 import com.guanchedata.infrastructure.ports.IndexStore;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.cp.lock.FencedLock;
 import com.hazelcast.multimap.MultiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HazelcastIndexStore implements IndexStore {
     private static final Logger log = LoggerFactory.getLogger(HazelcastIndexStore.class);
@@ -21,31 +21,29 @@ public class HazelcastIndexStore implements IndexStore {
         this.hz = hazelcastInstance;
         this.invertedIndex = hz.getMultiMap("inverted-index");
         this.indexingRegistry = hz.getSet("indexingRegistry");
-        this.invertedIndexEntry = new HashMap<>();
+        this.invertedIndexEntry = new ConcurrentHashMap<>();
         log.info("Hazelcast inverted index initialized");
     }
 
     @Override
     public void addEntry(String term, String documentId) {
-        invertedIndexEntry.
-                computeIfAbsent(term, k -> new HashSet<>())
-                        .add(documentId);
+        invertedIndexEntry
+                .computeIfAbsent(term, k -> ConcurrentHashMap.newKeySet())
+                .add(documentId);
     }
 
     @Override
     public void pushEntries() {
-        FencedLock lock = hz.getCPSubsystem().getLock("lock:inverted-index:distributed");
-        for (Map.Entry<String, Set<String>> entry: invertedIndexEntry.entrySet()) {
-            String term = entry.getKey();
-            for (String value : entry.getValue()) {
-                lock.lock();
-                try {
-                    invertedIndex.put(term, value);
-                } finally {
-                    lock.unlock();
-                }
-            }
-        }
+
+        invertedIndexEntry.entrySet()
+                .parallelStream()
+                .forEach(entry -> {
+                    String term = entry.getKey();
+                    for (String value : entry.getValue()) {
+                        invertedIndex.put(term, value);
+                    }
+                });
+
         invertedIndexEntry.clear();
     }
 
