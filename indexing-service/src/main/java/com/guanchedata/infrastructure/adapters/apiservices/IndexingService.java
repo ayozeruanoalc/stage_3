@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public class IndexingService {
@@ -62,7 +63,7 @@ public class IndexingService {
     }
 
     private int generateInvertedIndex(String body, int documentId) {
-        Set<String> tokens = tokenizer.tokenize(body);
+        List<String> tokens = tokenizer.tokenize(body);
 
         int tokenCount = 0;
         for (String token : tokens) {
@@ -70,6 +71,7 @@ public class IndexingService {
             indexStore.addEntry(normalizedToken, String.valueOf(documentId));
             tokenCount++;
         }
+        indexStore.saveTokens(tokenCount);
         return tokenCount;
     }
 

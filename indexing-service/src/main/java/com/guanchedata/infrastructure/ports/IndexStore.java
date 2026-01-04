@@ -8,4 +8,5 @@ public interface IndexStore {
     Set<String> getDocuments(String term);
     void clear();
     Collection<Integer> retrieveIndexingRegistry();
+    void saveTokens(Integer tokenCount);
 }

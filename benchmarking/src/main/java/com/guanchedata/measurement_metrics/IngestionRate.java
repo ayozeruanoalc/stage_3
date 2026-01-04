@@ -28,12 +28,12 @@ public class IngestionRate {
             long startCount = booklog.getAllDownloaded().size();
             long startTime = System.currentTimeMillis();
 
-            Thread.sleep(1000);  // ← Tu ingestión real aquí
+            Thread.sleep(1000);
 
             long endCount = booklog.getAllDownloaded().size();
             long endTime = System.currentTimeMillis();
-            double seconds = (endTime - startTime) / 1000.0;  // ← TIEMPO REAL
-            double rate = (endCount - startCount) / seconds;   // ← ✓ DIVIDIDO
+            double seconds = (endTime - startTime) / 1000.0;
+            double rate = (endCount - startCount) / seconds;
             if (i >= warmup) {
                 rates.add(rate);
                 status = "Iter";

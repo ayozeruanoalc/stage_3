@@ -15,10 +15,12 @@ public class HazelcastIndexStore implements IndexStore {
     private static final Logger log = LoggerFactory.getLogger(HazelcastIndexStore.class);
     private final MultiMap<String, String> invertedIndex;
     private final ISet<Integer> indexingRegistry;
+    private final HazelcastInstance hz;
 
     public HazelcastIndexStore(HazelcastInstance hazelcastInstance) {
-        this.invertedIndex = hazelcastInstance.getMultiMap("inverted-index");
-        this.indexingRegistry = hazelcastInstance.getSet("indexingRegistry");
+        this.hz = hazelcastInstance;
+        this.invertedIndex = hz.getMultiMap("inverted-index");
+        this.indexingRegistry = hz.getSet("indexingRegistry");
         log.info("Hazelcast inverted index initialized");
     }
 
@@ -41,5 +43,11 @@ public class HazelcastIndexStore implements IndexStore {
 
     public ISet<Integer> retrieveIndexingRegistry(){
         return this.indexingRegistry;
+    }
+
+    public void saveTokens(Integer tokenCount) {
+        if (hz.getCPSubsystem().getAtomicLong("token_counter_activator").get() == 1L) {
+            hz.getCPSubsystem().getAtomicLong("token_counter").addAndGet(tokenCount);
+        }
     }
 }
