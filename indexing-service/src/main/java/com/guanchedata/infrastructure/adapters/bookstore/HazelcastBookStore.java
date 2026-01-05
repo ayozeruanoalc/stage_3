@@ -19,9 +19,6 @@ public class HazelcastBookStore implements BookStore {
     @Override
     public String[] getBookContent(int bookId) {
         try {
-
-            System.out.println(datalake.keySet().stream().sorted().toList());
-
             BookContent book = this.datalake.get(bookId);
             if (book == null) {
                 log.error("Book not found in Hazelcast datalake: {}", bookId);

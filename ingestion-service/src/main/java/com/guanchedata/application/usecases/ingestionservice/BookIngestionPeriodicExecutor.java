@@ -2,19 +2,14 @@ package com.guanchedata.application.usecases.ingestionservice;
 
 import com.guanchedata.infrastructure.ports.BookDownloader;
 import com.guanchedata.model.BookContent;
-import com.guanchedata.model.NodeInfoProvider;
-import com.hazelcast.cluster.Member;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import com.hazelcast.multimap.MultiMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BookIngestionPeriodicExecutor {
 
@@ -39,7 +34,6 @@ public class BookIngestionPeriodicExecutor {
     private long lastRecoveryLogTime = 0;
 
     public void execute() {
-        System.out.println(this.hazelcast.getCluster().getMembers().stream().filter(m -> "indexer".equals(m.getAttribute("role"))).count());
         IMap<Integer, BookContent> datalake = this.hazelcast.getMap("datalake");
         if (datalake.keySet().size() < Integer.parseInt(System.getenv("INDEXING_BUFFER_FACTOR")) * this.hazelcast.getCluster().getMembers().stream().filter(m -> "indexer".equals(m.getAttribute("role"))).count()){
             try {
