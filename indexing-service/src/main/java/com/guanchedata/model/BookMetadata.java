@@ -9,6 +9,8 @@ public class BookMetadata implements Serializable {
     private String language;
     private Integer year;
 
+    public BookMetadata() {}
+
     public BookMetadata(String title, String author, String language, Integer year) {
         this.title = title;
         this.author = author;
@@ -17,10 +19,7 @@ public class BookMetadata implements Serializable {
     }
 
     public String getTitle() { return title; }
-
     public String getAuthor() { return author; }
-
     public String getLanguage() { return language; }
-
     public Integer getYear() { return year; }
 }
