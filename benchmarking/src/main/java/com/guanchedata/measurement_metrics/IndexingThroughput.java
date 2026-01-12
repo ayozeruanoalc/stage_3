@@ -12,7 +12,6 @@ public class IndexingThroughput {
         System.setProperty("hazelcast.logging.type", "none");
         ClientConfig cc = new ClientConfig();
         cc.setClusterName("SearchEngine");
-        cc.getNetworkConfig().addAddress("");
         HazelcastInstance hz = HazelcastClient.newHazelcastClient(cc);
 
         IAtomicLong activation = hz.getCPSubsystem().getAtomicLong("token_counter_activator");
