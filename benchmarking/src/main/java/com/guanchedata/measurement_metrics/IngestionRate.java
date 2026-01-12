@@ -13,7 +13,6 @@ public class IngestionRate {
         System.setProperty("hazelcast.logging.type", "none");
         ClientConfig cc = new ClientConfig();
         cc.setClusterName("SearchEngine");
-        cc.getNetworkConfig().addAddress("");
         HazelcastInstance hz = HazelcastClient.newHazelcastClient(cc);
         BookDownloadLog booklog = new BookDownloadLog(hz, "log");
 

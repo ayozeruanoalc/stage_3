@@ -1,7 +1,8 @@
 package com.guanchedata.measurement_metrics;
 
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.MapConfig;
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.cluster.MembershipEvent;
 import com.hazelcast.cluster.MembershipListener;
 import com.hazelcast.core.HazelcastInstance;
@@ -11,10 +12,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RecoveryTime {
     public static void main(String[] args) throws Exception {
         System.setProperty("hazelcast.logging.type", "none");
-        ClientConfig cc = new ClientConfig();
-        cc.setClusterName("SearchEngine");
-        cc.getNetworkConfig().addAddress("");
-        HazelcastInstance hz = HazelcastClient.newHazelcastClient(cc);
+        Config config = new Config();
+        config.setClusterName("SearchEngine");
+
+        MapConfig mapConfig = new MapConfig("*");
+        mapConfig.setBackupCount(0);
+        config.addMapConfig(mapConfig);
+
+
+        HazelcastInstance hz = Hazelcast.newHazelcastInstance(config);
 
         while (!hz.getPartitionService().isClusterSafe()) {
             Thread.sleep(500);

@@ -32,7 +32,7 @@ public class BookIngestionPeriodicExecutor {
 
     public void startPeriodicExecution() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleWithFixedDelay(this::execute, 0, 1, TimeUnit.MILLISECONDS);
+        scheduler.scheduleWithFixedDelay(this::execute, 0, 1, TimeUnit.SECONDS);
     }
 
     public void execute() {
