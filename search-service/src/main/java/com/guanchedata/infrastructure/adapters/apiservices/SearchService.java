@@ -5,7 +5,7 @@ import com.guanchedata.infrastructure.ports.MetadataStore;
 import com.guanchedata.model.BookMetadata;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -15,32 +15,60 @@ public class SearchService {
     private final IndexStore indexStore;
     private final MetadataStore metadataStore;
     private final String sortingCriteria;
+    private final ExecutorService searchExecutor;
 
     public SearchService(IndexStore indexStore, MetadataStore metadataStore, String sortingCriteria) {
         this.indexStore = indexStore;
         this.metadataStore = metadataStore;
         this.sortingCriteria = sortingCriteria;
+        int cores = Runtime.getRuntime().availableProcessors();
+        int maxThreads = cores - 2;
+        this.searchExecutor = Executors.newFixedThreadPool(maxThreads);
     }
 
     public List<SearchResult> search(String query, String author, String language, Integer year) {
         long startTime = System.currentTimeMillis();
-
         Map<String, Integer> contentResults = searchByContent(query);
-        Map<String, Integer> finalResults = filterByMetadata(contentResults, author, language, year);
 
-        List<SearchResult> enrichedResults = enrichWithMetadata(finalResults);
+        if (contentResults.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Set<Integer> docIds = contentResults.keySet().stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toSet());
+
+        Map<Integer, BookMetadata> bulkMetadata = metadataStore.getMetadataBulk(docIds);
+
+        List<SearchResult> finalResults = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> entry : contentResults.entrySet()) {
+            int docId = Integer.parseInt(entry.getKey());
+            BookMetadata meta = bulkMetadata.get(docId);
+
+            if (meta == null) continue;
+            if (!matchesFilter(meta, author, language, year)) continue;
+
+            finalResults.add(new SearchResult(
+                    docId,
+                    meta.getTitle(),
+                    meta.getAuthor(),
+                    meta.getLanguage(),
+                    meta.getYear() != null ? meta.getYear() : 0,
+                    entry.getValue()
+            ));
+        }
+
+        sortResults(finalResults);
 
         long duration = System.currentTimeMillis() - startTime;
-        log.info(String.format("Search: query='%s', author='%s', language='%s', year=%s, results=%d, time=%dms",
-                query, author, language, year, enrichedResults.size(), duration));
+        log.info(String.format("Search: results=%d, time=%dms", finalResults.size(), duration));
 
-        return enrichedResults;
+        return finalResults;
     }
 
     private Map<String, Integer> searchByContent(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            return Collections.emptyMap();
-        }
+        if (query == null || query.trim().isEmpty()) return Collections.emptyMap();
 
         String[] terms = query.toLowerCase()
                 .replaceAll("[^a-z0-9\\s]", " ")
@@ -49,82 +77,51 @@ public class SearchService {
 
         Map<String, Integer> documentFrequencies = new ConcurrentHashMap<>();
 
-        Arrays.stream(terms)
-                .parallel()
-                .filter(t -> t.length() > 2)
-                .forEach(term -> {
-                    Set<String> documentsForTerm = indexStore.getDocuments(term);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (String term : terms) {
+            if (term.length() <= 2) continue;
+
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                Set<String> documentsForTerm = indexStore.getDocuments(term);
+                if (documentsForTerm != null) {
                     for (String docEntry : documentsForTerm) {
                         String[] parts = docEntry.split(":");
                         String docId = parts[0];
                         int frequency = parts.length > 1 ? Integer.parseInt(parts[1]) : 1;
-
                         documentFrequencies.merge(docId, frequency, Integer::sum);
                     }
-                });
+                }
+            }, searchExecutor);
+            futures.add(future);
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         return documentFrequencies;
     }
 
-    private Map<String, Integer> filterByMetadata(Map<String, Integer> documentFrequencies,
-                                                  String author, String language, Integer year) {
-        if ((author == null || author.trim().isEmpty()) &&
-                (language == null || language.trim().isEmpty()) &&
-                year == null) {
-            return documentFrequencies;
+    private boolean matchesFilter(BookMetadata meta, String author, String language, Integer year) {
+        if (author != null && !author.isBlank() &&
+                (meta.getAuthor() == null || !meta.getAuthor().toLowerCase().contains(author.toLowerCase()))) {
+            return false;
         }
-
-        return documentFrequencies.entrySet()
-                .parallelStream()
-                .filter(entry -> {
-                    String docId = entry.getKey();
-                    BookMetadata metadata = metadataStore.getMetadata(docId);
-                    if (metadata == null) return false;
-
-                    boolean matches = true;
-                    if (author != null && !author.trim().isEmpty()) {
-                        matches = metadata.getAuthor() != null &&
-                                metadata.getAuthor().toLowerCase().contains(author.toLowerCase());
-                    }
-                    if (matches && language != null && !language.trim().isEmpty()) {
-                        matches = metadata.getLanguage() != null &&
-                                metadata.getLanguage().toLowerCase().contains(language.toLowerCase());
-                    }
-                    if (matches && year != null) {
-                        matches = metadata.getYear() != null && metadata.getYear().equals(year);
-                    }
-                    return matches;
-                })
-                .collect(Collectors.toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (language != null && !language.isBlank() &&
+                (meta.getLanguage() == null || !meta.getLanguage().toLowerCase().contains(language.toLowerCase()))) {
+            return false;
+        }
+        if (year != null && (meta.getYear() == null || !meta.getYear().equals(year))) {
+            return false;
+        }
+        return true;
     }
 
-    private List<SearchResult> enrichWithMetadata(Map<String, Integer> documentFrequencies) {
-        List<SearchResult> results = documentFrequencies.entrySet()
-                .parallelStream()
-                .map(entry -> {
-                    String docId = entry.getKey();
-                    int frequency = entry.getValue();
-
-                    BookMetadata metadata = metadataStore.getMetadata(docId);
-
-                    return new SearchResult(
-                            Integer.parseInt(docId),
-                            metadata != null ? metadata.getTitle() : "Unknown",
-                            metadata != null ? metadata.getAuthor() : "Unknown",
-                            metadata != null ? metadata.getLanguage() : "Unknown",
-                            metadata != null && metadata.getYear() != null ? metadata.getYear() : 0,
-                            frequency
-                    );
-                })
-                .collect(Collectors.toList());
-
+    private void sortResults(List<SearchResult> results) {
         if ("frequency".equals(sortingCriteria)) {
             results.sort((a, b) -> Integer.compare(b.getFrequency(), a.getFrequency()));
         } else if ("id".equals(sortingCriteria)) {
             results.sort((a, b) -> Integer.compare(a.getId(), b.getId()));
         }
-
-        return results;
     }
 
     public static class SearchResult {
@@ -143,7 +140,6 @@ public class SearchService {
             this.year = year;
             this.frequency = frequency;
         }
-
         public int getId() { return id; }
         public String getTitle() { return title; }
         public String getAuthor() { return author; }

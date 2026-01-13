@@ -7,24 +7,24 @@ import com.hazelcast.map.IMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.Set;
+
 public class HazelcastMetadataStore implements MetadataStore {
     private static final Logger log = LoggerFactory.getLogger(HazelcastMetadataStore.class);
-
     private final IMap<Integer, BookMetadata> metadataMap;
 
     public HazelcastMetadataStore(HazelcastInstance hazelcastInstance) {
         this.metadataMap = hazelcastInstance.getMap("bookMetadata");
-        log.info("Connected to Hazelcast metadata store");
     }
 
     @Override
     public BookMetadata getMetadata(String bookId) {
-        log.info("Getting metadata for: {}", bookId);
+        return metadataMap.get(Integer.parseInt(bookId));
+    }
 
-        Integer key = Integer.parseInt(bookId);
-        BookMetadata metadata = metadataMap.get(key);
-
-        log.info("Result: {}", (metadata != null ? metadata.getAuthor() : "NULL"));
-        return metadata;
+    @Override
+    public Map<Integer, BookMetadata> getMetadataBulk(Set<Integer> bookIds) {
+        return metadataMap.getAll(bookIds);
     }
 }
