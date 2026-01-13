@@ -9,7 +9,7 @@ public class BenchmarkRunner {
         String mode = System.getenv("BENCHMARK_MODE");
 
         if (mode == null || mode.isBlank()) {
-            mode = "recovery";
+            mode = "recoverytime";
             System.out.println(">>> No BENCHMARK_MODE found. Defaulting to: " + mode);
         }
 
@@ -18,13 +18,13 @@ public class BenchmarkRunner {
         System.out.println("==========================================");
 
         switch (mode.toLowerCase().trim()) {
-            case "ingestion":
+            case "ingestionrate":
                 IngestionRate.main(args);
                 break;
-            case "indexing":
+            case "indexingthroughput":
                 IndexingThroughput.main(args);
                 break;
-            case "recovery":
+            case "recoverytime":
                 RecoveryTime.main(args);
                 break;
             default:
