@@ -6,6 +6,7 @@ import com.guanchedata.model.BookMetadata;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -75,21 +76,26 @@ public class SearchService {
                 .trim()
                 .split("\\s+");
 
-        Map<String, Integer> documentFrequencies = new ConcurrentHashMap<>();
+        Map<String, Integer> frequencySum = new ConcurrentHashMap<>();
+        Map<String, Integer> termCount = new ConcurrentHashMap<>();
 
         List<CompletableFuture<Void>> futures = new ArrayList<>();
+        AtomicInteger validTermsCount = new AtomicInteger(0);
 
         for (String term : terms) {
             if (term.length() <= 2) continue;
 
+            validTermsCount.incrementAndGet();
+
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 Set<String> documentsForTerm = indexStore.getDocuments(term);
-                if (documentsForTerm != null) {
+                if (documentsForTerm != null && !documentsForTerm.isEmpty()) {
                     for (String docEntry : documentsForTerm) {
                         String[] parts = docEntry.split(":");
                         String docId = parts[0];
                         int frequency = parts.length > 1 ? Integer.parseInt(parts[1]) : 1;
-                        documentFrequencies.merge(docId, frequency, Integer::sum);
+                        frequencySum.merge(docId, frequency, Integer::sum);
+                        termCount.merge(docId, 1, Integer::sum);
                     }
                 }
             }, searchExecutor);
@@ -98,7 +104,12 @@ public class SearchService {
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-        return documentFrequencies;
+        int requiredMatches = validTermsCount.get();
+        if (requiredMatches == 0) return Collections.emptyMap();
+        frequencySum.keySet().removeIf(docId ->
+                termCount.getOrDefault(docId, 0) < requiredMatches
+        );
+        return frequencySum;
     }
 
     private boolean matchesFilter(BookMetadata meta, String author, String language, Integer year) {
