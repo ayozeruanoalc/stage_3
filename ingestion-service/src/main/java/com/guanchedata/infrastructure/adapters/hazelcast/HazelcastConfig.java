@@ -11,11 +11,13 @@ public class HazelcastConfig {
         Config config = new Config();
         config.setClusterName(clusterName);
 
+        EvictionConfig evictionConfig = new EvictionConfig()
+                .setEvictionPolicy(EvictionPolicy.NONE);
         MapConfig mapCfg = new MapConfig("inverted-index")
                 .setBackupCount(2)
-                .setAsyncBackupCount(1);
+                .setAsyncBackupCount(1)
+                .setEvictionConfig(evictionConfig);
         config.addMapConfig(mapCfg);
-
         MapConfig mapCfg2 = new MapConfig("bookMetadata")
                 .setBackupCount(2)
                 .setAsyncBackupCount(1);
@@ -26,12 +28,7 @@ public class HazelcastConfig {
                 .setAsyncBackupCount(1);
         config.addMapConfig(mapCfg3);
 
-        MapConfig mapCfg4= new MapConfig("inverted-index");
-        EvictionConfig evictionConfig = new EvictionConfig()
-                .setEvictionPolicy(EvictionPolicy.NONE);
-        mapCfg4.setEvictionConfig(evictionConfig);
-        mapCfg4.setBackupCount(1);
-        config.addMapConfig(mapCfg4);
+
 
         NetworkConfig networkConfig = config.getNetworkConfig();
         networkConfig.setPort(Integer.parseInt(System.getenv("HZ_PORT")));
