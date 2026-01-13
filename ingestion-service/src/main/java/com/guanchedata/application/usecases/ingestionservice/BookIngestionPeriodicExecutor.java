@@ -6,6 +6,8 @@ import com.hazelcast.collection.IQueue;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
+
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -61,7 +63,7 @@ public class BookIngestionPeriodicExecutor {
     private void logRecoveryIfNeeded() {
         long now = System.currentTimeMillis();
         if (now - lastRecoveryLogTime >= RECOVERY_LOG_INTERVAL_MS) {
-            System.out.println("[INDEXER][RECOVERY] Rebuilding inverted index from disk. Ingestion paused.");
+            System.out.println("(" + Instant.now() + ")" + " [INDEXER][RECOVERY] Rebuilding inverted index from disk. Ingestion paused.");
             lastRecoveryLogTime = now;
         }
     }
