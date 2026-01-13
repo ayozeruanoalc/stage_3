@@ -9,7 +9,6 @@ import com.guanchedata.infrastructure.adapters.metadata.HazelcastMetadataStore;
 import com.guanchedata.infrastructure.adapters.metadata.MetadataParser;
 import com.guanchedata.infrastructure.adapters.recovery.IngestionQueueManager;
 import com.guanchedata.infrastructure.adapters.recovery.InvertedIndexRecovery;
-import com.guanchedata.infrastructure.adapters.recovery.RebuildCoordinator;
 import com.guanchedata.infrastructure.adapters.recovery.ReindexingExecutor;
 import com.guanchedata.infrastructure.adapters.tokenizer.TextTokenizer;
 import com.guanchedata.infrastructure.config.HazelcastConfig;
@@ -50,16 +49,25 @@ public class Main {
         IngestionQueueManager ingestionQueueManager = new IngestionQueueManager(hazelcastInstance);
         ReindexingExecutor reindexingExecutor = new ReindexingExecutor(invertedIndexRecovery, hazelcastInstance, ingestionQueueManager);
 
-        RebuildCoordinator rebuildCoordinator = new RebuildCoordinator(hazelcastInstance, config.getBrokerUrl());
         RebuildMessageListener rebuildListener = new RebuildMessageListener(hazelcastInstance, reindexingExecutor, config.getBrokerUrl());
-
         rebuildListener.startListening();
 
-        IndexingController controller = new IndexingController(indexingService, rebuildCoordinator);
+        IndexingController controller = new IndexingController(indexingService, reindexingExecutor, config.getBrokerUrl());
 
         Gson gson = new Gson();
+        Javalin app = createJavalinApp(gson, config.getPort());
 
-        Javalin app = Javalin.create(cfg -> {
+        reindexingExecutor.executeRecovery();
+
+        app.post("/index/document/{documentId}", controller::indexDocument);
+        app.post("/index/rebuild", controller::rebuild);
+        app.get("/health", controller::health);
+
+        log.info("Indexing Service running on port {}\n", config.getPort());
+    }
+
+    private static Javalin createJavalinApp(Gson gson, int port) {
+        return Javalin.create(cfg -> {
             cfg.jsonMapper(new JsonMapper() {
                 @Override
                 public String toJsonString(Object obj, Type type) {
@@ -72,13 +80,6 @@ public class Main {
                 }
             });
             cfg.http.defaultContentType = "application/json";
-        }).start(config.getPort());
-
-        reindexingExecutor.executeRecovery();
-
-        app.post("/index/document/{documentId}", controller::indexDocument);
-        app.post("/index/rebuild", controller::rebuild);
-
-        log.info("Indexing Service running on port {}\n", config.getPort());
+        }).start(port);
     }
 }

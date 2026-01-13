@@ -82,12 +82,8 @@ public class RebuildMessageListener {
                 log.info("Waiting 5 seconds for all nodes to receive command...");
                 Thread.sleep(5000);
 
-                cleanupDistributedStructures();
-
-                Thread.sleep(2000);
-
-                log.info("Starting reindex from disk...");
-                reindexingExecutor.rebuildFromDisk();
+                log.info("Starting rebuild index...");
+                reindexingExecutor.rebuildIndex();
 
                 log.info("Rebuild completed on this node");
 
@@ -95,22 +91,6 @@ public class RebuildMessageListener {
                 log.error("Error during rebuild", e);
             }
         }, "Rebuild-Worker").start();
-    }
-
-    private void cleanupDistributedStructures() {
-        try {
-            log.info("Clearing distributed structures...");
-
-            hz.getSet("indexingRegistry").clear();
-            hz.getMultiMap("inverted-index").clear();
-            hz.getMap("bookMetadata").clear();
-            hz.getQueue("books").clear();
-
-            log.info("Cleanup completed");
-
-        } catch (Exception e) {
-            log.warn("Error during cleanup (might be race condition): {}", e.getMessage());
-        }
     }
 
     private void sleep(long ms) {
