@@ -6,4 +6,5 @@ EXPOSE 5704
 
 WORKDIR /app
 
+ENV BENCHMARK_MODE=recovery
 ENTRYPOINT ["java", "-jar", "benchmark.jar"]
