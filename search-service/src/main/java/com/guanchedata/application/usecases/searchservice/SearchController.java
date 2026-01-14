@@ -52,9 +52,15 @@ public class SearchController {
             List<SearchService.SearchResult> results = searchService.search(query, author, language, year);
 
             Map<String, Object> filters = new LinkedHashMap<>();
-            filters.put("author", author != null ? author : "");
-            filters.put("language", language != null ? language : "");
-            filters.put("year", year != null ? year : "");
+            if (author != null){
+                filters.put("author", author);
+            }
+            if (language != null){
+                filters.put("language", language);
+            }
+            if (year != null) {
+                filters.put("year", year);
+            }
 
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("query", query);
