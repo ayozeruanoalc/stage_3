@@ -80,6 +80,8 @@ services:
       BROKER_URL: tcp://xxx:61616
     networks:
       - search_net
+    profiles:
+      - benchmark
 
   activemq:
     image: rmohr/activemq:latest
