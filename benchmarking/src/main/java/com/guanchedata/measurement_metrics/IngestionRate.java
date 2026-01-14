@@ -59,7 +59,7 @@ public class IngestionRate {
 
         double avg = rates.stream().mapToDouble(Double::doubleValue).average().orElse(0);
         double stdev = Math.sqrt(rates.stream().mapToDouble(r -> Math.pow(r - avg, 2)).average().orElse(0));
-        System.out.printf("%n=== RESULTADO FINAL ===%n");
+        System.out.printf("%n=== FINAL RESULTS ===%n");
         System.out.printf("IngestionRate: %.3f ± %.3f books/s%n", avg, stdev);
         System.out.printf("(min=%.3f, avg=%.3f, max=%.3f)%n",
                 rates.stream().min(Double::compareTo).orElse(0d),
