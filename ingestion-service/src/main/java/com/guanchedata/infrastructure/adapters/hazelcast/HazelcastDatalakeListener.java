@@ -34,7 +34,7 @@ public class HazelcastDatalakeListener {
         booksToBeReplicated.addItemListener(new ItemListener<BookReplicationCommand>() {
             @Override
             public void itemAdded(ItemEvent<BookReplicationCommand> itemEvent) {
-                processBook(itemEvent.getItem());
+                processBook(itemEvent.getItem(), booksToBeReplicated);
             }
 
             @Override
@@ -42,8 +42,12 @@ public class HazelcastDatalakeListener {
         }, true);
     }
 
-    private void processBook(BookReplicationCommand replicated) {
-        if (replicated.getSourceNode().equals(nodeInfoProvider.getNodeId())) return;
+    private void processBook(BookReplicationCommand replicated, IQueue<BookReplicationCommand> booksToBeReplicated) {
+        if (replicated.getAlreadyReplicatedNodes().contains(nodeInfoProvider.getNodeId())) {
+            return;
+        }
+        booksToBeReplicated.poll();
+        replicated.getAlreadyReplicatedNodes().add(nodeInfoProvider.getNodeId());
         IMap<Integer,Integer> replicationLog = hazelcast.getMap("replicationLog");
         saveRetrievedBook(replicated.getId());
         replicationLog.put(replicated.getId(), replicationLog.getOrDefault(replicated.getId(), 1) + 1);

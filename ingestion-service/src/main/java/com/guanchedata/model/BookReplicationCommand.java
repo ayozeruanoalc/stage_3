@@ -1,12 +1,13 @@
 package com.guanchedata.model;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class BookReplicationCommand implements Serializable {
     private final int id;
-    private final String sourceNode;
+    private final List<String> sourceNode;
 
-    public BookReplicationCommand(int id, String sourceNode) {
+    public BookReplicationCommand(int id, List<String> sourceNode) {
         this.id = id;
         this.sourceNode = sourceNode;
     }
@@ -15,7 +16,7 @@ public class BookReplicationCommand implements Serializable {
         return this.id;
     }
 
-    public String getSourceNode() {
+    public List<String> getAlreadyReplicatedNodes() {
         return this.sourceNode;
     }
 }

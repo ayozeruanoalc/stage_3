@@ -7,6 +7,7 @@ import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.multimap.MultiMap;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class HazelcastReplicationExecuter implements ReplicationExecuter {
@@ -32,8 +33,10 @@ public class HazelcastReplicationExecuter implements ReplicationExecuter {
         //lock.lock();
         IQueue<BookReplicationCommand> booksToBeReplicated = hazelcast.getQueue("booksToBeReplicated");
         try {
+            List<String> alreadyReplicatedNodes = new ArrayList<String>();
+            alreadyReplicatedNodes.add(nodeInfoProvider.getNodeId());
             for (int i = 1; i < replicationFactor; i++) {
-                booksToBeReplicated.put(new BookReplicationCommand(bookId, this.nodeInfoProvider.getNodeId()));
+                booksToBeReplicated.put(new BookReplicationCommand(bookId, alreadyReplicatedNodes));
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
