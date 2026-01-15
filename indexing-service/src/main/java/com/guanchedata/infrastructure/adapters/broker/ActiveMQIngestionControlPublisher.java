@@ -10,24 +10,25 @@ public class ActiveMQIngestionControlPublisher implements IngestionControlPublis
 
     private final ConnectionFactory factory;
     private final Gson gson = new Gson();
+    private static final String TOPIC_NAME = "ingestion.control";
 
     public ActiveMQIngestionControlPublisher(String brokerUrl) {
         this.factory = new ActiveMQConnectionFactory(brokerUrl);
     }
 
     public void publishPause() {
-        publish("INGESTION_PAUSE");
+        publish(IngestionControlEvent.Type.INGESTION_PAUSE);
     }
 
     public void publishResume() {
-        publish("INGESTION_RESUME");
+        publish(IngestionControlEvent.Type.INGESTION_RESUME);
     }
 
-    private void publish(String type) {
+    private void publish(IngestionControlEvent.Type type) {
         try (Connection connection = factory.createConnection()) {
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Topic topic = session.createTopic("ingestion.control");
+            Topic topic = session.createTopic(TOPIC_NAME);
 
             MessageProducer producer = session.createProducer(topic);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT); // If one node is not on at the time, it still gets the message
