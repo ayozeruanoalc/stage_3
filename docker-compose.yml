@@ -57,7 +57,7 @@ services:
       HZ_PUBLIC_ADDRESS: xxx:5703
       HZ_MEMBERS: xxx:5701
       HAZELCAST_CLUSTER_NAME: SearchEngine
-      SORTING_CRITERIA: "frequency" #frequency or id
+      SORTING_CRITERIA: "frequency"
     networks:
       - search_net
     profiles:
@@ -104,7 +104,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./search-service/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - search_net
     profiles:
