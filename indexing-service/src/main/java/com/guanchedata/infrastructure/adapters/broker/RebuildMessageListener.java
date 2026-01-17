@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.guanchedata.model.RebuildCommand;
 import com.guanchedata.infrastructure.adapters.recovery.ReindexingExecutor;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.cp.ICountDownLatch; // [NUEVO] Importar el cerrojo distribuido
 import jakarta.jms.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
@@ -92,9 +93,12 @@ public class RebuildMessageListener {
                 Thread.sleep(10000);
 
                 log.info("Starting rebuild index...");
+
                 reindexingExecutor.rebuildIndex();
 
                 log.info("Rebuild completed on this node");
+
+                hz.getCPSubsystem().getCountDownLatch("rebuild-latch").countDown();
 
             } catch (Exception e) {
                 log.error("Error during rebuild", e);
