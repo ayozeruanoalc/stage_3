@@ -1,7 +1,9 @@
 package com.guanchedata.application.usecases.ingestionservice;
 
+import com.guanchedata.infrastructure.adapters.activemq.ActiveMQIngestionControlConsumer;
 import com.guanchedata.infrastructure.ports.BookDownloader;
 import com.guanchedata.model.BookContent;
+import com.guanchedata.model.IngestionPauseController;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BookIngestionPeriodicExecutor {
 
@@ -19,12 +22,14 @@ public class BookIngestionPeriodicExecutor {
     private final BookDownloader ingestBookService;
     private IQueue<Integer> queue;
     private ISet<Integer> indexingRegistry;
+    private final IngestionPauseController pauseController;
 
-    public BookIngestionPeriodicExecutor(HazelcastInstance hazelcast, BookDownloader ingestBookService) {
+    public BookIngestionPeriodicExecutor(HazelcastInstance hazelcast, BookDownloader ingestBookService, IngestionPauseController pauseController) {
         this.hazelcast = hazelcast;
         this.ingestBookService = ingestBookService;
         this.queue = this.hazelcast.getQueue("books");
         this.indexingRegistry = this.hazelcast.getSet("indexingRegistry");
+        this.pauseController = pauseController;
     }
 
     public void startPeriodicExecution() {
@@ -36,6 +41,9 @@ public class BookIngestionPeriodicExecutor {
     private long lastRecoveryLogTime = 0;
 
     public void execute() {
+        if (pauseController.isPaused()) {
+            return;
+        }
         IMap<Integer, BookContent> datalake = this.hazelcast.getMap("datalake");
         if (datalake.keySet().size() < Integer.parseInt(System.getenv("INDEXING_BUFFER_FACTOR")) * this.hazelcast.getCluster().getMembers().stream().filter(m -> "indexer".equals(m.getAttribute("role"))).count()){
             try {
