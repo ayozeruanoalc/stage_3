@@ -12,7 +12,8 @@ public class GutenbergBookProvider {
     private final GutenbergConnection gutenbergConnection;
     private final GutenbergBookContentSeparator gutenbergBookContentSeparator;
 
-    public GutenbergBookProvider(GutenbergFetch gutenbergFetch, GutenbergConnection gutenbergConnection, GutenbergBookContentSeparator gutenbergBookContentSeparator) {
+    public GutenbergBookProvider(GutenbergFetch gutenbergFetch, GutenbergConnection gutenbergConnection,
+                                 GutenbergBookContentSeparator gutenbergBookContentSeparator) {
         this.gutenbergFetch = gutenbergFetch;
         this.gutenbergConnection = gutenbergConnection;
         this.gutenbergBookContentSeparator = gutenbergBookContentSeparator;
@@ -24,9 +25,7 @@ public class GutenbergBookProvider {
 
     public String fetchBook(int bookId) {
         try {
-            GutenbergConnection connection = new GutenbergConnection();
-            GutenbergFetch fetch = new GutenbergFetch();
-            return fetch.fetchBook(connection.createConnection(bookId));
+            return this.gutenbergFetch.fetchBook(this.gutenbergConnection.createConnection(bookId));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

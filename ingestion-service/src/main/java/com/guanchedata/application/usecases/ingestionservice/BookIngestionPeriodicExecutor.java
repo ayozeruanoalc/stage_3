@@ -6,7 +6,6 @@ import com.hazelcast.collection.IQueue;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -37,7 +36,9 @@ public class BookIngestionPeriodicExecutor {
 
     public void execute() {
         IMap<Integer, BookContent> datalake = this.hazelcast.getMap("datalake");
-        if (datalake.keySet().size() < Integer.parseInt(System.getenv("INDEXING_BUFFER_FACTOR")) * this.hazelcast.getCluster().getMembers().stream().filter(m -> "indexer".equals(m.getAttribute("role"))).count()){
+        if (datalake.keySet().size() < Integer.parseInt(System.getenv("INDEXING_BUFFER_FACTOR"))
+                * this.hazelcast.getCluster().getMembers().stream()
+                .filter(m -> "indexer".equals(m.getAttribute("role"))).count()){
             try {
                 if (this.queue.isEmpty()) {
                     logRecoveryIfNeeded();
@@ -46,14 +47,13 @@ public class BookIngestionPeriodicExecutor {
                     Integer bookId = queue.poll(100, TimeUnit.MILLISECONDS);
                     if (bookId != null && !this.indexingRegistry.contains(bookId)) {
                         System.out.println("Ingesting book: " + bookId);
-                        Map<String, Object> result = ingestBookService.ingest(bookId);
+                        Map<String, Object> result = ingestBookService.ingestBook(bookId);
                         System.out.println("Result: " + result);
                     }
                     else {
                         System.out.println("Book {" + bookId + "} is already indexed. Skipping ingestion...");
                     }
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -63,7 +63,8 @@ public class BookIngestionPeriodicExecutor {
     private void logRecoveryIfNeeded() {
         long now = System.currentTimeMillis();
         if (now - lastRecoveryLogTime >= RECOVERY_LOG_INTERVAL_MS) {
-            System.out.println("(" + Instant.now() + ")" + " [INDEXER][RECOVERY] Rebuilding inverted index from disk. Ingestion paused.");
+            System.out.println("(" + Instant.now() + ")" +
+                    " [INDEXER][RECOVERY] Rebuilding inverted index from disk. Ingestion paused.");
             lastRecoveryLogTime = now;
         }
     }

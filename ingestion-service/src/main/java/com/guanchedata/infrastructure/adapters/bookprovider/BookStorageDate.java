@@ -15,11 +15,9 @@ public class BookStorageDate implements BookStorage {
     }
 
     @Override
-    public Path save(int bookId, String[] contentSeparated) throws IOException {
+    public Path saveBook(int bookId, String[] contentSeparated) throws IOException {
         String header = contentSeparated[0];
         String body = contentSeparated[1];
-
-        // EXTRACT METHOD
 
         Path path = pathGenerator.generatePath();
 
@@ -28,8 +26,6 @@ public class BookStorageDate implements BookStorage {
 
         Files.writeString(headerPath, header);
         Files.writeString(contentPath, body);
-
-        // EXTRACT METHOD
 
         return path;
     }

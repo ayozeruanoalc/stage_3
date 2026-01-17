@@ -4,10 +4,8 @@ import com.guanchedata.infrastructure.ports.BookDownloadStatusStore;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.collection.ISet;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class BookDownloadLog implements BookDownloadStatusStore {
     private final ISet<Integer> downloadedBooks;
@@ -17,17 +15,17 @@ public class BookDownloadLog implements BookDownloadStatusStore {
     }
 
     @Override
-    public void registerDownload(int bookId) throws IOException {
+    public void registerBookDownload(int bookId) {
         downloadedBooks.add(bookId);
     }
 
     @Override
-    public boolean isDownloaded(int bookId) throws IOException {
+    public boolean isDownloaded(int bookId) {
         return downloadedBooks.contains(bookId);
     }
 
     @Override
-    public List<Integer> getAllDownloaded() throws IOException {
+    public List<Integer> getAllDownloadedBooks() {
         return new ArrayList<>(downloadedBooks);
     }
 }

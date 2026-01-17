@@ -6,7 +6,6 @@ import com.guanchedata.model.NodeInfoProvider;
 import com.guanchedata.util.GutenbergBookProvider;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import com.hazelcast.multimap.MultiMap;
 
 public class HazelcastManager {
 
@@ -15,15 +14,18 @@ public class HazelcastManager {
     HazelcastDatalakeListener hazelcastDatalakeListener;
     HazelcastReplicationExecuter hazelcastReplicationExecuter;
 
-    public HazelcastManager(String clusterName, int replicationFactor, GutenbergBookProvider gutenbergBookDownloader, BookStorageDate bookStorageDate) {
-        this.nodeInfoProvider = new NodeInfoProvider(System.getenv("HZ_PUBLIC_ADDRESS")); // NODE IDENTIFIER
-        this.hazelcastInstance = new HazelcastConfig().initHazelcast(clusterName); // CREATE HAZELCAST MEMBER
-        this.hazelcastDatalakeListener = new HazelcastDatalakeListener(this.hazelcastInstance, this.nodeInfoProvider, gutenbergBookDownloader, bookStorageDate);
+    public HazelcastManager(String clusterName, int replicationFactor, GutenbergBookProvider
+            gutenbergBookDownloader, BookStorageDate bookStorageDate) {
+        this.nodeInfoProvider = new NodeInfoProvider(System.getenv("HZ_PUBLIC_ADDRESS"));
+        this.hazelcastInstance = new HazelcastConfig().initHazelcast(clusterName);
+        this.hazelcastDatalakeListener = new HazelcastDatalakeListener(this.hazelcastInstance,
+                this.nodeInfoProvider, gutenbergBookDownloader, bookStorageDate);
         this.hazelcastDatalakeListener.registerListener();
-        this.hazelcastReplicationExecuter = new HazelcastReplicationExecuter(this.hazelcastInstance, this.nodeInfoProvider,replicationFactor);
+        this.hazelcastReplicationExecuter = new HazelcastReplicationExecuter(this.hazelcastInstance,
+                this.nodeInfoProvider,replicationFactor);
     }
 
-    public void uploadToMemory(int bookId, String[] contentSeparated) {
+    public void uploadBookToMemory(int bookId, String[] contentSeparated) {
         String header = contentSeparated[0];
         String body = contentSeparated[1];
         IMap<Integer,BookContent> datalake = this.hazelcastInstance.getMap("datalake");
@@ -32,10 +34,6 @@ public class HazelcastManager {
 
     public HazelcastInstance getHazelcastInstance() {
         return this.hazelcastInstance;
-    }
-
-    public NodeInfoProvider getNodeInfoProvider() {
-        return this.nodeInfoProvider;
     }
 
     public HazelcastReplicationExecuter getHazelcastReplicationExecuter() {

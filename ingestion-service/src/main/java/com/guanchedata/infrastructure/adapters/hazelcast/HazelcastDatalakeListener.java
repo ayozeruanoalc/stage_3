@@ -22,10 +22,8 @@ public class HazelcastDatalakeListener {
     private final ExecutorService executorService;
     private volatile boolean active = true;
 
-    public HazelcastDatalakeListener(HazelcastInstance hazelcast,
-                                     NodeInfoProvider nodeInfoProvider,
-                                     GutenbergBookProvider bookProvider,
-                                     BookStorageDate bookStorageDate) {
+    public HazelcastDatalakeListener(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider,
+                                     GutenbergBookProvider bookProvider, BookStorageDate bookStorageDate) {
         this.hazelcast = hazelcast;
         this.nodeInfoProvider = nodeInfoProvider;
         this.bookProvider = bookProvider;
@@ -97,7 +95,7 @@ public class HazelcastDatalakeListener {
 
     private void saveRetrievedBook(int bookId) {
         try {
-            this.bookStorageDate.save(bookId, this.bookProvider.getBook(bookId));
+            this.bookStorageDate.saveBook(bookId, this.bookProvider.getBook(bookId));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

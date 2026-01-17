@@ -24,7 +24,6 @@ public class DateTimePathGenerator implements PathGenerator {
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH");
-
         String dateDirectory = instant.atZone(zone).format(dateFormatter);
         String timeDirectory = instant.atZone(zone).format(timeFormatter);
 

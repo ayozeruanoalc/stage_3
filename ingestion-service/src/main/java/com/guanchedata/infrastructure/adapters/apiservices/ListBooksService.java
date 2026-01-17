@@ -16,10 +16,10 @@ public class ListBooksService implements BookListProvider {
     }
 
     @Override
-    public Map<String, Object> list() {
+    public Map<String, Object> getBookList() {
         log.info("list() - Listing books in the datalake");
         try {
-            List<Integer> downloadedBooks = bookDownloadLog.getAllDownloaded();
+            List<Integer> downloadedBooks = bookDownloadLog.getAllDownloadedBooks();
             return successResponse(downloadedBooks);
         } catch (Exception e) {
             log.error("list() - Error listing books: {}", e.getMessage(), e);
@@ -32,14 +32,12 @@ public class ListBooksService implements BookListProvider {
     private Map<String, Object> successResponse(List<Integer> downloadedBooks){
         return Map.of(
                 "count", downloadedBooks.size(),
-                "books", downloadedBooks
-        );
+                "books", downloadedBooks);
     }
 
     private Map<String, Object> errorResponse(String errorMessage){
         return Map.of(
                 "status", "error",
-                "message", errorMessage
-        );
+                "message", errorMessage);
     }
 }

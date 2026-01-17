@@ -18,35 +18,46 @@ public class HazelcastConfig {
                 .addSerializer(new BookContentSerializer())
                 .addSerializer(new NodeInfoProviderSerializer());
 
-        MapConfig mapCfg = new MapConfig("inverted-index")
+        setMapConfig(config);
+        setNetworkConfig(config);
+        setJoinConfig(config);
+
+        return Hazelcast.newHazelcastInstance(config);
+    }
+
+    private void setMapConfig(Config config) {
+        MapConfig invertedIndexReplicaConfig = new MapConfig("inverted-index")
                 .setBackupCount(2)
                 .setAsyncBackupCount(1);
-        config.addMapConfig(mapCfg);
-        MapConfig mapCfg2 = new MapConfig("bookMetadata")
+        config.addMapConfig(invertedIndexReplicaConfig);
+
+        MapConfig bookMetadataReplicaConfig = new MapConfig("bookMetadata")
                 .setBackupCount(2)
                 .setAsyncBackupCount(1);
-        config.addMapConfig(mapCfg2);
+        config.addMapConfig(bookMetadataReplicaConfig);
 
-        MapConfig mapCfg3 = new MapConfig("datalake")
+        MapConfig datalakeReplicaConfig = new MapConfig("datalake")
                 .setBackupCount(2)
                 .setAsyncBackupCount(1);
-        config.addMapConfig(mapCfg3);
+        config.addMapConfig(datalakeReplicaConfig);
+    }
 
-
-
+    private void setNetworkConfig(Config config) {
         NetworkConfig networkConfig = config.getNetworkConfig();
         networkConfig.setPort(Integer.parseInt(System.getenv("HZ_PORT")));
         networkConfig.setPortAutoIncrement(false);
         config.setProperty("hazelcast.wait.seconds.before.join", "0");
 
-        JoinConfig join = config.getNetworkConfig().getJoin();
-        join.getMulticastConfig().setEnabled(false);
-        join.getAutoDetectionConfig().setEnabled(false);
-
         String publicAddr = System.getenv("HZ_PUBLIC_ADDRESS");
         if (publicAddr != null && !publicAddr.isBlank()) {
             networkConfig.setPublicAddress(publicAddr);
         }
+    }
+
+    private void setJoinConfig(Config config) {
+        JoinConfig join = config.getNetworkConfig().getJoin();
+        join.getMulticastConfig().setEnabled(false);
+        join.getAutoDetectionConfig().setEnabled(false);
 
         String members = System.getenv("HZ_MEMBERS");
         if (members != null && !members.isBlank()) {
@@ -55,7 +66,6 @@ public class HazelcastConfig {
                 join.getTcpIpConfig().addMember(m.trim());
             }
         }
-
-        return Hazelcast.newHazelcastInstance(config);
     }
 }
+

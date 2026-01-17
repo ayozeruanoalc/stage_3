@@ -15,7 +15,8 @@ public class HazelcastReplicationExecuter implements ReplicationExecuter {
     private final NodeInfoProvider nodeInfoProvider;
     private final int replicationFactor;
 
-    public HazelcastReplicationExecuter(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider, int replicationFactor) {
+    public HazelcastReplicationExecuter(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider,
+                                        int replicationFactor) {
         this.hazelcast = hazelcast;
         this.nodeInfoProvider = nodeInfoProvider;
         this.replicationFactor = replicationFactor;

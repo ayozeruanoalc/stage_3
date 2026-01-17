@@ -13,9 +13,7 @@ public class BookProviderController {
     private final BookStatusProvider bookStatusService;
     private static final Gson gson = new Gson();
 
-    public BookProviderController(
-            BookDownloader ingestBookService,
-            BookListProvider listBooksService,
+    public BookProviderController(BookDownloader ingestBookService, BookListProvider listBooksService,
             BookStatusProvider bookStatusService) {
         this.ingestBookService = ingestBookService;
         this.listBooksService = listBooksService;
@@ -24,18 +22,18 @@ public class BookProviderController {
 
     public void ingestBook(Context ctx) {
         int bookId = Integer.parseInt(ctx.pathParam("book_id"));
-        Map<String, Object> result = ingestBookService.ingest(bookId);
+        Map<String, Object> result = ingestBookService.ingestBook(bookId);
         ctx.result(gson.toJson(result));
     }
 
     public void listAllBooks(Context ctx) {
-        Map<String, Object> result = listBooksService.list();
+        Map<String, Object> result = listBooksService.getBookList();
         ctx.result(gson.toJson(result));
     }
 
     public void status(Context ctx) {
         int bookId = Integer.parseInt(ctx.pathParam("book_id"));
-        Map<String, Object> result = bookStatusService.status(bookId);
+        Map<String, Object> result = bookStatusService.getBookStatus(bookId);
         ctx.result(gson.toJson(result));
     }
 }

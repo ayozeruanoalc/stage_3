@@ -15,7 +15,7 @@ public class ActiveMQBookIngestedNotifier implements BookIngestedNotifier {
     }
 
     @Override
-    public void notify(int bookId) {
+    public void notifyIngestedBook(int bookId) {
         try (Connection connection = factory.createConnection()) {
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -25,7 +25,6 @@ public class ActiveMQBookIngestedNotifier implements BookIngestedNotifier {
             Gson gson = new Gson();
             DocumentIngestedEvent event = new DocumentIngestedEvent(bookId);
             String json = gson.toJson(event);
-            //System.out.println(json);
 
             TextMessage message = session.createTextMessage(json);
             producer.send(message);

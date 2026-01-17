@@ -37,12 +37,12 @@ public class IngestionRate {
         int count;
 
         for (int i = 0; i < 15; i++) {
-            long startCount = booklog.getAllDownloaded().size();
+            long startCount = booklog.getAllDownloadedBooks().size();
             long startTime = System.currentTimeMillis();
 
             Thread.sleep(1000);
 
-            long endCount = booklog.getAllDownloaded().size();
+            long endCount = booklog.getAllDownloadedBooks().size();
             long endTime = System.currentTimeMillis();
             double seconds = (endTime - startTime) / 1000.0;
             double rate = (endCount - startCount) / seconds;

@@ -15,7 +15,7 @@ public class BookStatusService implements BookStatusProvider {
     }
 
     @Override
-    public Map<String, Object> status(int bookId) {
+    public Map<String, Object> getBookStatus(int bookId) {
         log.info("status() - Start execution for bookId={}", bookId);
         try {
             boolean isBookAvailable = bookDownloadLog.isDownloaded(bookId);
@@ -37,22 +37,19 @@ public class BookStatusService implements BookStatusProvider {
         log.info("status() - Book {} is available in datalake", bookId);
         return Map.of(
                 "book_id", bookId,
-                "status", "available"
-        );
+                "status", "available");
     }
 
     private Map<String, Object> notAvailableResponse(int bookId){
         return Map.of(
                 "book_id", bookId,
-                "status", "not_available"
-        );
+                "status", "not_available");
     }
 
     private Map<String, Object> errorResponse(int bookId, String errorMessage){
         return Map.of(
                 "book_id", bookId,
                 "status", "error",
-                "message", errorMessage
-        );
+                "message", errorMessage);
     }
 }
