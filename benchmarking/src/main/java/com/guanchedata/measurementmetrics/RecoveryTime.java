@@ -1,4 +1,4 @@
-package com.guanchedata.measurement_metrics;
+package com.guanchedata.measurementmetrics;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.JoinConfig;

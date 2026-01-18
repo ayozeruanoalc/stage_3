@@ -1,8 +1,8 @@
 package com.guanchedata;
 
-import com.guanchedata.measurement_metrics.IngestionRate;
-import com.guanchedata.measurement_metrics.RecoveryTime;
-import com.guanchedata.measurement_metrics.IndexingThroughput;
+import com.guanchedata.measurementmetrics.IngestionRate;
+import com.guanchedata.measurementmetrics.RecoveryTime;
+import com.guanchedata.measurementmetrics.IndexingThroughput;
 
 public class BenchmarkRunner {
     public static void main(String[] args) throws Exception {
