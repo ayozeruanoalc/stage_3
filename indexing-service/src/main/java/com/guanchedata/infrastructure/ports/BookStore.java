@@ -1,5 +1,8 @@
 package com.guanchedata.infrastructure.ports;
 
+import com.guanchedata.model.BookContent;
+
 public interface BookStore {
-    String[] getBookContent(int bookId);
+    BookContent getBookContent(int bookId);
+    void save(int bookId, BookContent content);
 }

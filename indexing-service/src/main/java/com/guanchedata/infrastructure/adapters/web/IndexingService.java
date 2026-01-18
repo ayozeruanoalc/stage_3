@@ -4,6 +4,7 @@ import com.guanchedata.infrastructure.adapters.metadata.HazelcastMetadataStore;
 import com.guanchedata.infrastructure.ports.BookStore;
 import com.guanchedata.infrastructure.ports.IndexStore;
 import com.guanchedata.infrastructure.ports.Tokenizer;
+import com.guanchedata.model.BookContent;
 import com.hazelcast.core.HazelcastInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,8 @@ public class IndexingService {
         log.info("Starting indexing for document: " + documentId);
 
         try {
-            String[] content = bookStore.getBookContent(documentId);
-            indexResolvedDocument(documentId, content[0], content[1]);
+            BookContent content = bookStore.getBookContent(documentId);
+            indexResolvedDocument(documentId, content.getHeader(), content.getBody());
 
         } catch (Exception e) {
             log.error("Error indexing document {}: {}", documentId, e.getMessage());
