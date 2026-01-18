@@ -4,7 +4,6 @@ import com.guanchedata.application.usecases.indexingservice.IndexingController;
 import com.guanchedata.infrastructure.adapters.tokenizer.JsonStopWordsLoader;
 import com.guanchedata.infrastructure.adapters.tokenizer.StopWordsLoader;
 import com.guanchedata.infrastructure.adapters.web.HazelcastBookStore;
-import com.guanchedata.infrastructure.adapters.web.IndexingService;
 import com.guanchedata.infrastructure.adapters.broker.RebuildMessageListener;
 import com.guanchedata.infrastructure.adapters.indexstore.HazelcastIndexStore;
 import com.guanchedata.infrastructure.adapters.metadata.HazelcastMetadataStore;
@@ -13,6 +12,9 @@ import com.guanchedata.infrastructure.adapters.recovery.IngestionQueueManager;
 import com.guanchedata.infrastructure.adapters.recovery.InvertedIndexRecovery;
 import com.guanchedata.infrastructure.adapters.recovery.ReindexingExecutor;
 import com.guanchedata.infrastructure.adapters.tokenizer.TextTokenizer;
+import com.guanchedata.infrastructure.adapters.web.HazelcastIndexingStatusStore;
+import com.guanchedata.infrastructure.adapters.web.IndexBook;
+import com.guanchedata.infrastructure.adapters.web.TermFrequencyAnalyzer;
 import com.guanchedata.infrastructure.config.HazelcastConfig;
 import com.guanchedata.infrastructure.config.MessageBrokerConfig;
 import com.guanchedata.infrastructure.config.ServiceConfig;
@@ -30,47 +32,45 @@ public class Main {
         ServiceConfig config = new ServiceConfig();
 
         HazelcastConfig hazelcastConfig = new HazelcastConfig();
-        HazelcastInstance hazelcastInstance = hazelcastConfig.initHazelcast(config.getClusterName());
+        HazelcastInstance hz = hazelcastConfig.initHazelcast(config.getClusterName());
 
-        HazelcastIndexStore indexStore = new HazelcastIndexStore(hazelcastInstance);
-        HazelcastBookStore bookStore = new HazelcastBookStore(hazelcastInstance);
-        HazelcastMetadataStore hazelcastMetadataStore = new HazelcastMetadataStore(hazelcastInstance, new MetadataParser());
+        HazelcastIndexStore indexStore = new HazelcastIndexStore(hz);
+        HazelcastBookStore bookStore = new HazelcastBookStore(hz);
+        HazelcastMetadataStore metadataStore = new HazelcastMetadataStore(hz, new MetadataParser());
+        HazelcastIndexingStatusStore statusStore = new HazelcastIndexingStatusStore(hz);
 
-        StopWordsLoader stopWordsLoader = new JsonStopWordsLoader();
+        JsonStopWordsLoader stopWordsLoader = new JsonStopWordsLoader();
         TextTokenizer tokenizer = new TextTokenizer(stopWordsLoader.load());
+        TermFrequencyAnalyzer analyzer = new TermFrequencyAnalyzer(tokenizer);
 
-        IndexingService indexingService = new IndexingService(indexStore, tokenizer, bookStore, hazelcastMetadataStore, hazelcastInstance);
+        IndexBook indexBook = new IndexBook(
+                bookStore,
+                indexStore,
+                metadataStore,
+                statusStore,
+                analyzer
+        );
 
-        InvertedIndexRecovery invertedIndexRecovery = new InvertedIndexRecovery(args[0], indexingService);
-        IngestionQueueManager ingestionQueueManager = new IngestionQueueManager(hazelcastInstance);
-        ReindexingExecutor reindexingExecutor = new ReindexingExecutor(invertedIndexRecovery, hazelcastInstance, ingestionQueueManager);
+        InvertedIndexRecovery recovery = new InvertedIndexRecovery(args[0], indexBook, bookStore);
+        IngestionQueueManager queueManager = new IngestionQueueManager(hz);
+        ReindexingExecutor reindexingExecutor = new ReindexingExecutor(recovery, hz, queueManager);
 
         reindexingExecutor.executeRecovery();
 
-        RebuildMessageListener rebuildListener = new RebuildMessageListener(
-                hazelcastInstance,
-                reindexingExecutor,
-                config.getBrokerUrl()
-        );
+        RebuildMessageListener rebuildListener = new RebuildMessageListener(hz, reindexingExecutor, config.getBrokerUrl());
         rebuildListener.startListening();
 
         MessageBrokerConfig brokerConfig = new MessageBrokerConfig();
-        MessageConsumer messageConsumer = brokerConfig.createConsumer(
-                config.getBrokerUrl(),
-                indexingService,
-                rebuildListener
-        );
+        MessageConsumer messageConsumer = brokerConfig.createConsumer(config.getBrokerUrl(), indexBook, rebuildListener);
 
-        IndexingController controller = new IndexingController(indexingService, reindexingExecutor, config.getBrokerUrl(), hazelcastInstance);
+        IndexingController controller = new IndexingController(indexBook, reindexingExecutor, config.getBrokerUrl(), hz);
 
-        Javalin app = Javalin.create(config2 -> {
-            config2.http.defaultContentType = "application/json";
-        }).start(7002);
+        Javalin app = Javalin.create(c -> {
+            c.http.defaultContentType = "application/json";
+        }).start(config.getPort());
 
         app.post("/index/document/{documentId}", controller::indexDocument);
         app.post("/index/rebuild", controller::rebuild);
         app.get("/health", controller::health);
-
-        log.info("Indexing Service running on port {}\n", config.getPort());
     }
 }

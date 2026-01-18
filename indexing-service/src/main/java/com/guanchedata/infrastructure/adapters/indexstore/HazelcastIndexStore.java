@@ -24,10 +24,11 @@ public class HazelcastIndexStore implements IndexStore {
     }
 
     @Override
-    public void addEntry(String term, String documentId) {
+    public void addEntry(String term, String documentId, Long frequency) {
+        String value = documentId + ":" + frequency;
         invertedIndexEntry
                 .computeIfAbsent(term, k -> ConcurrentHashMap.newKeySet())
-                .add(documentId);
+                .add(value);
     }
 
     @Override

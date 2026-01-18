@@ -1,7 +1,7 @@
 package com.guanchedata.application.usecases.indexingservice;
 
 import com.google.gson.Gson;
-import com.guanchedata.infrastructure.adapters.web.IndexingService;
+import com.guanchedata.infrastructure.adapters.web.IndexBook;
 import com.guanchedata.infrastructure.adapters.broker.ActiveMQIngestionControlPublisher;
 import com.guanchedata.infrastructure.adapters.recovery.ReindexingExecutor;
 import com.guanchedata.model.RebuildCommand;
@@ -20,16 +20,13 @@ public class IndexingController {
     private static final Logger log = LoggerFactory.getLogger(IndexingController.class);
     private static final Gson gson = new Gson();
 
-    private final IndexingService indexingService;
+    private final IndexBook indexBook;
     private final ReindexingExecutor reindexingExecutor;
     private final String brokerUrl;
-    private final HazelcastInstance hz; // Añadido para gestionar el Latch distribuido
+    private final HazelcastInstance hz;
 
-    public IndexingController(IndexingService indexingService,
-                              ReindexingExecutor reindexingExecutor,
-                              String brokerUrl,
-                              HazelcastInstance hz) {
-        this.indexingService = indexingService;
+    public IndexingController(IndexBook indexBook, ReindexingExecutor reindexingExecutor, String brokerUrl, HazelcastInstance hz) {
+        this.indexBook = indexBook;
         this.reindexingExecutor = reindexingExecutor;
         this.brokerUrl = brokerUrl;
         this.hz = hz;
@@ -40,7 +37,8 @@ public class IndexingController {
         log.info("Received index request for document: {}", documentId);
 
         try {
-            indexingService.indexDocument(documentId);
+            indexBook.execute(documentId);
+
             ctx.status(200).result(gson.toJson(Map.of(
                     "status", "success",
                     "message", "Document indexed successfully",
@@ -48,10 +46,7 @@ public class IndexingController {
             )));
         } catch (Exception e) {
             log.error("Error indexing document {}: {}", documentId, e.getMessage());
-            ctx.status(500).result(gson.toJson(Map.of(
-                    "status", "error",
-                    "message", e.getMessage()
-            )));
+            ctx.status(500).result(gson.toJson(Map.of("status", "error", "message", e.getMessage())));
         }
     }
 

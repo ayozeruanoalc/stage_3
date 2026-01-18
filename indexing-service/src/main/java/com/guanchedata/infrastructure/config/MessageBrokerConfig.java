@@ -1,8 +1,8 @@
 package com.guanchedata.infrastructure.config;
 
-import com.guanchedata.infrastructure.adapters.web.IndexingService;
 import com.guanchedata.infrastructure.adapters.broker.ActiveMQMessageConsumer;
 import com.guanchedata.infrastructure.adapters.broker.RebuildMessageListener;
+import com.guanchedata.infrastructure.adapters.web.IndexBook;
 import com.guanchedata.infrastructure.ports.MessageConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 public class MessageBrokerConfig {
     private static final Logger log = LoggerFactory.getLogger(MessageBrokerConfig.class);
 
-    public MessageConsumer createConsumer(String brokerUrl,
-                                          IndexingService indexingService,
-                                          RebuildMessageListener rebuildListener) {
+    public MessageConsumer createConsumer(String brokerUrl, IndexBook indexBook, RebuildMessageListener rebuildListener) {
         MessageConsumer messageConsumer = new ActiveMQMessageConsumer(
                 brokerUrl,
                 "documents.ingested",
@@ -20,9 +18,8 @@ public class MessageBrokerConfig {
         );
 
         messageConsumer.startConsuming(documentId -> {
-            System.out.println();
             log.info("Processing document from broker: {}", documentId);
-            indexingService.indexDocument(Integer.parseInt(documentId));
+            indexBook.execute(Integer.parseInt(documentId));
         });
 
         return messageConsumer;
