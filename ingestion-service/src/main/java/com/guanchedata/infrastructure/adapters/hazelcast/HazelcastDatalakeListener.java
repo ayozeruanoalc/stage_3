@@ -1,8 +1,8 @@
 package com.guanchedata.infrastructure.adapters.hazelcast;
 
-import com.guanchedata.infrastructure.adapters.bookprovider.BookStorageDate;
+import com.guanchedata.infrastructure.adapters.filesystem.BookStorageDate;
+import com.guanchedata.infrastructure.ports.BookProvider;
 import com.guanchedata.model.NodeInfoProvider;
-import com.guanchedata.util.GutenbergBookProvider;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
@@ -16,14 +16,14 @@ public class HazelcastDatalakeListener {
 
     private final NodeInfoProvider nodeInfoProvider;
     private final HazelcastInstance hazelcast;
-    private final GutenbergBookProvider bookProvider;
+    private final BookProvider bookProvider;
     private final BookStorageDate bookStorageDate;
 
     private final ExecutorService executorService;
     private volatile boolean active = true;
 
     public HazelcastDatalakeListener(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider,
-                                     GutenbergBookProvider bookProvider, BookStorageDate bookStorageDate) {
+                                     BookProvider bookProvider, BookStorageDate bookStorageDate) {
         this.hazelcast = hazelcast;
         this.nodeInfoProvider = nodeInfoProvider;
         this.bookProvider = bookProvider;
@@ -95,7 +95,7 @@ public class HazelcastDatalakeListener {
 
     private void saveRetrievedBook(int bookId) {
         try {
-            this.bookStorageDate.saveBook(bookId, this.bookProvider.getBook(bookId));
+            this.bookStorageDate.saveBook(bookId, this.bookProvider.getBookContent(bookId));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

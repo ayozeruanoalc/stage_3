@@ -1,4 +1,4 @@
-package com.guanchedata.util;
+package com.guanchedata.infrastructure.adapters.filesystem;
 
 import com.guanchedata.infrastructure.ports.PathGenerator;
 

@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.broker;
+package com.guanchedata.infrastructure.adapters.activemq;
 
 import com.google.gson.Gson;
 import com.guanchedata.infrastructure.ports.IngestionControlPublisher;

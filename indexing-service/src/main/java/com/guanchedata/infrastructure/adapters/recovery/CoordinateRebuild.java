@@ -1,7 +1,7 @@
 package com.guanchedata.infrastructure.adapters.recovery;
 
 import com.google.gson.Gson;
-import com.guanchedata.infrastructure.adapters.broker.ActiveMQIngestionControlPublisher;
+import com.guanchedata.infrastructure.adapters.activemq.ActiveMQIngestionControlPublisher;
 import com.guanchedata.model.RebuildCommand;
 import com.guanchedata.model.RebuildResult;
 import com.hazelcast.core.HazelcastInstance;

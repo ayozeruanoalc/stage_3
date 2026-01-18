@@ -1,7 +1,7 @@
-package com.guanchedata.infrastructure.adapters.hazelcast;
+package com.guanchedata.infrastructure.config;
 
-import com.guanchedata.model.BookContentSerializer;
-import com.guanchedata.model.NodeInfoProviderSerializer;
+import com.guanchedata.infrastructure.adapters.hazelcast.BookContentSerializer;
+import com.guanchedata.infrastructure.adapters.hazelcast.NodeInfoProviderSerializer;
 import com.hazelcast.config.*;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;

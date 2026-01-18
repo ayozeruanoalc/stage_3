@@ -1,80 +1,74 @@
 package com.guanchedata.application.usecases.ingestionservice;
 
-import com.guanchedata.infrastructure.adapters.activemq.ActiveMQIngestionControlConsumer;
-import com.guanchedata.infrastructure.ports.BookDownloader;
-import com.guanchedata.model.BookContent;
+import com.guanchedata.infrastructure.ports.IngestionQueueRepository;
 import com.guanchedata.model.IngestionPauseController;
-import com.hazelcast.collection.IQueue;
-import com.hazelcast.collection.ISet;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.map.IMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BookIngestionPeriodicExecutor {
 
-    private final HazelcastInstance hazelcast;
-    private final BookDownloader ingestBookService;
-    private IQueue<Integer> queue;
-    private ISet<Integer> indexingRegistry;
-    private final IngestionPauseController pauseController;
-
-    public BookIngestionPeriodicExecutor(HazelcastInstance hazelcast, BookDownloader ingestBookService, IngestionPauseController pauseController) {
-        this.hazelcast = hazelcast;
-        this.ingestBookService = ingestBookService;
-        this.queue = this.hazelcast.getQueue("books");
-        this.indexingRegistry = this.hazelcast.getSet("indexingRegistry");
-        this.pauseController = pauseController;
-    }
-
-    public void startPeriodicExecution() {
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleWithFixedDelay(this::execute, 0, 1, TimeUnit.SECONDS);
-    }
-
+    private static final Logger log = LoggerFactory.getLogger(BookIngestionPeriodicExecutor.class);
     private static final long RECOVERY_LOG_INTERVAL_MS = 20_000;
+
+    private final IngestBook ingestBookUseCase;
+    private final IngestionPauseController pauseController;
+    private final IngestionQueueRepository queueRepository; // Nuevo Puerto
+    private final int bufferFactor;
+
     private long lastRecoveryLogTime = 0;
+
+    public BookIngestionPeriodicExecutor(IngestBook ingestBookUseCase, IngestionPauseController pauseController,
+                                         IngestionQueueRepository queueRepository, int bufferFactor) {
+        this.ingestBookUseCase = ingestBookUseCase;
+        this.pauseController = pauseController;
+        this.queueRepository = queueRepository;
+        this.bufferFactor = bufferFactor;
+    }
 
     public void execute() {
         if (pauseController.isPaused()) {
             return;
         }
-        IMap<Integer, BookContent> datalake = this.hazelcast.getMap("datalake");
-        if (datalake.keySet().size() < Integer.parseInt(System.getenv("INDEXING_BUFFER_FACTOR"))
-                * this.hazelcast.getCluster().getMembers().stream()
-                .filter(m -> "indexer".equals(m.getAttribute("role"))).count()){
+
+        if (shouldProcessNextBook()) {
             try {
-                if (this.queue.isEmpty()) {
+                Integer bookId = queueRepository.pollNextBook();
+                if (bookId == null) {
                     logRecoveryIfNeeded();
-                }
-                else {
-                    Integer bookId = queue.poll(100, TimeUnit.MILLISECONDS);
-                    if (bookId != null && !this.indexingRegistry.contains(bookId)) {
-                        System.out.println("Ingesting book: " + bookId);
-                        Map<String, Object> result = ingestBookService.ingestBook(bookId);
-                        System.out.println("Result: " + result);
-                    }
-                    else {
-                        System.out.println("Book {" + bookId + "} is already indexed. Skipping ingestion...");
-                    }
+                } else {
+                    processBook(bookId);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error in ingestion cycle", e);
             }
+        }
+    }
+
+    private boolean shouldProcessNextBook() {
+        int currentSize = queueRepository.getDatalakeSize();
+        int nodes = queueRepository.getIndexerNodeCount();
+        if (nodes == 0) nodes = 1;
+        return currentSize < (bufferFactor * nodes);
+    }
+
+    private void processBook(Integer bookId) {
+        if (!queueRepository.isBookIndexed(bookId)) {
+            log.info("Ingesting book: {}", bookId);
+            Map<String, Object> result = ingestBookUseCase.execute(bookId);
+            log.info("Result: {}\n", result);
+        } else {
+            log.info("Book {} is already indexed. Skipping ingestion...", bookId);
         }
     }
 
     private void logRecoveryIfNeeded() {
         long now = System.currentTimeMillis();
         if (now - lastRecoveryLogTime >= RECOVERY_LOG_INTERVAL_MS) {
-            System.out.println("(" + Instant.now() + ")" +
-                    " [INDEXER][RECOVERY] Rebuilding inverted index from disk. Ingestion paused.");
+            log.info("({}) [INDEXER][RECOVERY] Queue empty or rebuilding...\n", Instant.now());
             lastRecoveryLogTime = now;
         }
     }
-
 }

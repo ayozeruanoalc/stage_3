@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.bookprovider;
+package com.guanchedata.infrastructure.adapters.filesystem;
 
 import com.guanchedata.infrastructure.ports.BookStorage;
 import com.guanchedata.infrastructure.ports.PathGenerator;

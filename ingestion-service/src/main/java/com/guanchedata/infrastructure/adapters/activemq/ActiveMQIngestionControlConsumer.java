@@ -7,8 +7,6 @@ import com.guanchedata.model.IngestionPauseController;
 import jakarta.jms.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class ActiveMQIngestionControlConsumer implements IngestionControlConsumer {
 
     private static final String TOPIC_NAME = "ingestion.control";
@@ -18,9 +16,7 @@ public class ActiveMQIngestionControlConsumer implements IngestionControlConsume
     private final String consumerId;
     private final IngestionPauseController pauseController;
 
-    public ActiveMQIngestionControlConsumer(String brokerUrl,
-                                            String consumerId,
-                                            IngestionPauseController pauseController) {
+    public ActiveMQIngestionControlConsumer(String brokerUrl, String consumerId, IngestionPauseController pauseController) {
         this.brokerUrl = brokerUrl;
         this.consumerId = consumerId;
         this.pauseController = pauseController;

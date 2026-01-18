@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.apiservices;
+package com.guanchedata.infrastructure.adapters.web;
 
 import com.guanchedata.infrastructure.ports.BookDownloadStatusStore;
 import com.guanchedata.infrastructure.ports.BookStatusProvider;
