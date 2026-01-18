@@ -1,9 +1,9 @@
 package com.guanchedata.model;
 
-public class NodeInfoProvider {
+public class NodeInformation {
     private String nodeId;
 
-    public NodeInfoProvider(String nodeId) {
+    public NodeInformation(String nodeId) {
         this.nodeId = nodeId;
     }
 

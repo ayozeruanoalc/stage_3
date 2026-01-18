@@ -2,7 +2,7 @@ package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.adapters.filesystem.BookStorageDate;
 import com.guanchedata.infrastructure.ports.BookProvider;
-import com.guanchedata.model.NodeInfoProvider;
+import com.guanchedata.model.NodeInformation;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
@@ -14,18 +14,17 @@ import java.util.concurrent.Executors;
 
 public class HazelcastDatalakeListener {
 
-    private final NodeInfoProvider nodeInfoProvider;
+    private final NodeInformation nodeInformation;
     private final HazelcastInstance hazelcast;
     private final BookProvider bookProvider;
     private final BookStorageDate bookStorageDate;
-
     private final ExecutorService executorService;
     private volatile boolean active = true;
 
-    public HazelcastDatalakeListener(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider,
+    public HazelcastDatalakeListener(HazelcastInstance hazelcast, NodeInformation nodeInformation,
                                      BookProvider bookProvider, BookStorageDate bookStorageDate) {
         this.hazelcast = hazelcast;
-        this.nodeInfoProvider = nodeInfoProvider;
+        this.nodeInformation = nodeInformation;
         this.bookProvider = bookProvider;
         this.bookStorageDate = bookStorageDate;
         this.executorService = Executors.newSingleThreadExecutor();
@@ -52,7 +51,7 @@ public class HazelcastDatalakeListener {
     }
 
     private void processBook(int bookId, IQueue<Integer> queue) {
-        String myNodeId = nodeInfoProvider.getNodeId();
+        String myNodeId = nodeInformation.getNodeId();
         IMap<Integer, Set<String>> replicatedNodesMap = hazelcast.getMap("replicatedNodesMap");
         Set<String> currentOwners = replicatedNodesMap.get(bookId);
         boolean iAlreadyHaveIt = currentOwners != null && currentOwners.contains(myNodeId);

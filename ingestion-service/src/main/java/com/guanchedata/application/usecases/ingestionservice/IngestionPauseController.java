@@ -1,4 +1,4 @@
-package com.guanchedata.model;
+package com.guanchedata.application.usecases.ingestionservice;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

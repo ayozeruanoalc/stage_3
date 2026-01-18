@@ -3,7 +3,7 @@ package com.guanchedata.infrastructure.adapters.activemq;
 import com.google.gson.Gson;
 import com.guanchedata.infrastructure.ports.IngestionControlConsumer;
 import com.guanchedata.model.IngestionControlEvent;
-import com.guanchedata.model.IngestionPauseController;
+import com.guanchedata.application.usecases.ingestionservice.IngestionPauseController;
 import jakarta.jms.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
 

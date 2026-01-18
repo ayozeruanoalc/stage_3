@@ -1,7 +1,7 @@
 package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.ports.ReplicationExecuter;
-import com.guanchedata.model.NodeInfoProvider;
+import com.guanchedata.model.NodeInformation;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
@@ -12,13 +12,13 @@ import java.util.Set;
 public class HazelcastReplicationExecuter implements ReplicationExecuter {
 
     private final HazelcastInstance hazelcast;
-    private final NodeInfoProvider nodeInfoProvider;
+    private final NodeInformation nodeInformation;
     private final int replicationFactor;
 
-    public HazelcastReplicationExecuter(HazelcastInstance hazelcast, NodeInfoProvider nodeInfoProvider,
+    public HazelcastReplicationExecuter(HazelcastInstance hazelcast, NodeInformation nodeInformation,
                                         int replicationFactor) {
         this.hazelcast = hazelcast;
-        this.nodeInfoProvider = nodeInfoProvider;
+        this.nodeInformation = nodeInformation;
         this.replicationFactor = replicationFactor;
     }
 
@@ -33,7 +33,7 @@ public class HazelcastReplicationExecuter implements ReplicationExecuter {
         replicatedNodesMap.lock(bookId);
         try {
             Set<String> nodes = replicatedNodesMap.getOrDefault(bookId, new HashSet<>());
-            nodes.add(nodeInfoProvider.getNodeId());
+            nodes.add(nodeInformation.getNodeId());
             replicatedNodesMap.put(bookId, nodes);
         } finally {
             replicatedNodesMap.unlock(bookId);

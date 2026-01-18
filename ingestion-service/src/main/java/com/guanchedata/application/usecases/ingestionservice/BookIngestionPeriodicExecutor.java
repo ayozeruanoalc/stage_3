@@ -1,7 +1,6 @@
 package com.guanchedata.application.usecases.ingestionservice;
 
 import com.guanchedata.infrastructure.ports.IngestionQueueRepository;
-import com.guanchedata.model.IngestionPauseController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,7 @@ public class BookIngestionPeriodicExecutor {
 
     private final IngestBook ingestBookUseCase;
     private final IngestionPauseController pauseController;
-    private final IngestionQueueRepository queueRepository; // Nuevo Puerto
+    private final IngestionQueueRepository queueRepository;
     private final int bufferFactor;
 
     private long lastRecoveryLogTime = 0;

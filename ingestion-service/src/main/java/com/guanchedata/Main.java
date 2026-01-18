@@ -14,7 +14,7 @@ import com.guanchedata.infrastructure.adapters.scheduler.PeriodicScheduler;
 import com.guanchedata.infrastructure.adapters.web.BookStatusService;
 import com.guanchedata.infrastructure.adapters.web.ListBooksService;
 import com.guanchedata.infrastructure.ports.*;
-import com.guanchedata.model.IngestionPauseController;
+import com.guanchedata.application.usecases.ingestionservice.IngestionPauseController;
 import com.guanchedata.infrastructure.adapters.filesystem.DateTimePathGenerator;
 import io.javalin.Javalin;
 import org.slf4j.Logger;
