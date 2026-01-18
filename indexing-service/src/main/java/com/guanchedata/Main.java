@@ -53,10 +53,11 @@ public class Main {
 
         reindexingExecutor.executeRecovery();
 
-        RebuildMessageListener rebuildListener = new RebuildMessageListener(hz, reindexingExecutor, brokerUrl);
+        ConnectionFactory jmsFactory = new ActiveMQConnectionFactory(brokerUrl);
+
+        RebuildMessageListener rebuildListener = new RebuildMessageListener(hz, reindexingExecutor, jmsFactory);
         rebuildListener.startListening();
 
-        ConnectionFactory jmsFactory = new ActiveMQConnectionFactory(brokerUrl);
         MessageConsumer messageConsumer = new ActiveMQMessageConsumer(jmsFactory, "documents.ingested", rebuildListener);
         messageConsumer.startConsuming(documentId -> {
             log.info("Processing document from broker: {}", documentId);
