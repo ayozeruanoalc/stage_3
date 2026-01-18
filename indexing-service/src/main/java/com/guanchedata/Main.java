@@ -57,7 +57,7 @@ public class Main {
                 rebuildListener
         );
 
-        IndexingController controller = new IndexingController(indexingService, reindexingExecutor, config.getBrokerUrl());
+        IndexingController controller = new IndexingController(indexingService, reindexingExecutor, config.getBrokerUrl(), hazelcastInstance);
 
         Javalin app = Javalin.create(config2 -> {
             config2.http.defaultContentType = "application/json";

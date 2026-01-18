@@ -2,6 +2,7 @@ package com.guanchedata;
 
 import com.guanchedata.application.usecases.ingestionservice.BookIngestionPeriodicExecutor;
 import com.guanchedata.application.usecases.ingestionservice.BookProviderController;
+import com.guanchedata.model.IngestionPauseController;
 import com.guanchedata.infrastructure.adapters.activemq.ActiveMQBookIngestedNotifier;
 import com.guanchedata.infrastructure.adapters.apiservices.BookStatusService;
 import com.guanchedata.infrastructure.adapters.apiservices.ingestbookservice.IngestBookInfrastructure;
@@ -47,6 +48,9 @@ public class Main {
 
         BookIngestionPeriodicExecutor bookIngestionExecutor =
                 new BookIngestionPeriodicExecutor(hazelcastManager.getHazelcastInstance(),ingestBookService);
+        IngestionPauseController pauseController = new IngestionPauseController();
+
+        BookIngestionPeriodicExecutor bookIngestionExecutor = new BookIngestionPeriodicExecutor(hazelcastManager.getHazelcastInstance(),ingestBookService, pauseController);
 
         Javalin app = Javalin.create(config -> { config.http.defaultContentType = "application/json";})
                 .start(7001);
