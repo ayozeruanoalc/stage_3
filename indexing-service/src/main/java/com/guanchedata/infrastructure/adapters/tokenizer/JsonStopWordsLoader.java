@@ -2,6 +2,7 @@ package com.guanchedata.infrastructure.adapters.tokenizer;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.guanchedata.infrastructure.ports.StopWordsLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

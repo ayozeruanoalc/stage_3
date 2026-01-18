@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.web;
+package com.guanchedata.application.usecases.indexingservice;
 
 import com.guanchedata.infrastructure.ports.Tokenizer;
 import java.util.Map;

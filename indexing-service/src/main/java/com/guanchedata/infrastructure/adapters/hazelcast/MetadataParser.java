@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.metadata;
+package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.model.BookMetadata;
 

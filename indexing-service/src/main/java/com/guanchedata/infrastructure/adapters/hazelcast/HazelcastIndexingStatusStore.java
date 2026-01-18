@@ -1,5 +1,6 @@
-package com.guanchedata.infrastructure.adapters.web;
+package com.guanchedata.infrastructure.adapters.hazelcast;
 
+import com.guanchedata.infrastructure.ports.IndexingStatusStore;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;
 

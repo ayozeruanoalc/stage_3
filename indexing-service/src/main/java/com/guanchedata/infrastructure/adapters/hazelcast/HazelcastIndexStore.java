@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.indexstore;
+package com.guanchedata.infrastructure.adapters.hazelcast;
 import com.guanchedata.infrastructure.ports.IndexStore;
 import com.hazelcast.collection.ISet;
 import com.hazelcast.core.HazelcastInstance;

@@ -1,7 +1,7 @@
 package com.guanchedata.infrastructure.adapters.recovery;
 
 
-import com.guanchedata.infrastructure.adapters.web.IndexBook;
+import com.guanchedata.application.usecases.indexingservice.IndexBook;
 import com.guanchedata.infrastructure.ports.BookStore;
 import com.guanchedata.infrastructure.ports.RecoveryExecuter;
 import com.guanchedata.model.BookContent;

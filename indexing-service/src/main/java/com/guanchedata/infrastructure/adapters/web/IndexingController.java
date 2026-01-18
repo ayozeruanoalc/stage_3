@@ -1,8 +1,8 @@
-package com.guanchedata.application.usecases.indexingservice;
+package com.guanchedata.infrastructure.adapters.web;
 
 import com.google.gson.Gson;
+import com.guanchedata.application.usecases.indexingservice.IndexBook;
 import com.guanchedata.infrastructure.adapters.recovery.CoordinateRebuild;
-import com.guanchedata.infrastructure.adapters.web.IndexBook;
 import com.guanchedata.model.RebuildResult;
 import io.javalin.http.Context;
 import org.slf4j.Logger;

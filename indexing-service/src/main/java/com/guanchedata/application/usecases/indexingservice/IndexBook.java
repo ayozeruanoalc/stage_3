@@ -1,7 +1,8 @@
-package com.guanchedata.infrastructure.adapters.web;
+package com.guanchedata.application.usecases.indexingservice;
 
 import com.guanchedata.infrastructure.ports.BookStore;
 import com.guanchedata.infrastructure.ports.IndexStore;
+import com.guanchedata.infrastructure.ports.IndexingStatusStore;
 import com.guanchedata.infrastructure.ports.MetadataStore;
 import com.guanchedata.model.BookContent;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.web;
+package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.ports.BookStore;
 import com.guanchedata.model.BookContent;

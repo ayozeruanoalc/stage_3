@@ -1,11 +1,10 @@
-package com.guanchedata.infrastructure.adapters.metadata;
+package com.guanchedata.infrastructure.adapters.hazelcast;
 
 import com.guanchedata.infrastructure.ports.MetadataStore;
 import com.guanchedata.model.BookContent;
 import com.guanchedata.model.BookMetadata;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
-import com.hazelcast.multimap.MultiMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

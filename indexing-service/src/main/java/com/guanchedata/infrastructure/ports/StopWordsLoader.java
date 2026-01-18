@@ -1,4 +1,4 @@
-package com.guanchedata.infrastructure.adapters.tokenizer;
+package com.guanchedata.infrastructure.ports;
 
 import java.util.Set;
 

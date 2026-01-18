@@ -1,7 +1,7 @@
 package com.guanchedata.infrastructure.config;
 
-import com.guanchedata.model.BookContentSerializer;
-import com.guanchedata.model.BookMetadataSerializer;
+import com.guanchedata.infrastructure.adapters.hazelcast.BookContentSerializer;
+import com.guanchedata.infrastructure.adapters.hazelcast.BookMetadataSerializer;
 import com.hazelcast.config.*;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
