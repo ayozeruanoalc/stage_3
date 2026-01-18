@@ -138,14 +138,14 @@ search-service:
 
 ### Nginx Load Balancer Configuration
 
-Before starting the load balancer, the `nginx.conf` file must be updated to include the IP addresses of all nodes running a search service. Each backend entry must point to a reachable `<IP>:7003` endpoint.
+Before starting the load balancer, the `nginx.conf` file must be updated to include the IP addresses of all nodes running a search service. Each backend entry must point to a reachable `<NODE_IP>:7003` endpoint.
 
 ```nginx
 upstream search_backend {
     least_conn;
 
-    server <SEARCH_IP>:7003 max_fails=10 fail_timeout=30s;
-    # server <SEARCH_IP>:7003 max_fails=10 fail_timeout=30s;
+    server <NODE_IP>:7003 max_fails=10 fail_timeout=30s;
+    # server <NODE_IP>:7003 max_fails=10 fail_timeout=30s;
 
     keepalive 64;
 }
@@ -241,9 +241,7 @@ The `/benchmarks` directory also contains datasets, logs, and previous benchmark
 
 ## Demonstration Video
 
-🎥 **YouTube (Unlisted)** 
-
-👉 [[Stage 3] Search Engine Project - GuancheData (ULPGC)](https://www.youtube.com/watch?v=XXXXXXXXXXX)
+👉 [[Stage 3] Search Engine Project - GuancheData (ULPGC)](https://youtu.be/tb8FYEy7YjY)
 
 The video demonstrates system deployment, real-time ingestion and search operations, horizontal
 scaling under load, and automatic recovery after simulated failures.
