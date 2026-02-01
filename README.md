@@ -1,63 +1,83 @@
-# Search Engine - Stage 3
+# Book Search Engine - Stage 3
 
-[![My Skills](https://go-skill-icons.vercel.app/api/icons?i=java,maven,docker)](https://go-skill-icons.vercel.app/api/) &nbsp;![Architecture Badge](assets/badges/hazelcastv3.1.svg) &nbsp;![Architecture Badge](assets/badges/activemq.svg) &nbsp;[![My Skills](https://go-skill-icons.vercel.app/api/icons?i=nginx,github)](https://go-skill-icons.vercel.app/api/)
+[![My Skills](https://go-skill-icons.vercel.app/api/icons?i=java,maven,idea,docker)](https://go-skill-icons.vercel.app/api/) &nbsp;![Architecture Badge](assets/badges/hazelcastv3.1.svg) &nbsp;![Architecture Badge](assets/badges/activemq.svg) &nbsp;[![My Skills](https://go-skill-icons.vercel.app/api/icons?i=nginx)](https://go-skill-icons.vercel.app/api/) &nbsp;[![My Skills](https://skills.syvixor.com/api/icons?perline=15&i=apachejmeter)](https://go-skill-icons.vercel.app/api/) &nbsp;[![My Skills](https://go-skill-icons.vercel.app/api/icons?i=github)](https://go-skill-icons.vercel.app/api/)
 
-## Project Description
+## 📑 Tabla de contenidos
 
-This project implements a **distributed, fault-tolerant, and horizontally scalable search engine architecture**. The objective is to provide a complete search platform capable of handling ingestion, indexing, and querying workloads across multiple cooperating nodes.
+- [✨ Descripción del proyecto](#-descripción-del-proyecto)
+- [🧭 Contexto arquitectónico](#-contexto-arquitectónico)
+- [🗺️ Diagrama de arquitectura](#️-diagrama-de-arquitectura)
+- [🔧 Instrucciones de construcción y ejecución](#-instrucciones-de-construcción-y-ejecución)
+- [📊 Benchmarking](#-benchmarking-pruebas-de-rendimiento)
+- [🎥 Vídeo de demostración](#-vídeo-de-demostración)
+- [👥 Autores](#-autores)
 
-The system is designed as a set of cooperating services deployed across multiple nodes and containers. It supports **parallel document ingestion, distributed indexing, and low-latency search** under increasing load, while remaining operational in the presence of partial failures. Scalability and resilience are achieved through replication, asynchronous communication, and in-memory data sharing.
 
-Key architectural features include:
 
-- **Distributed ingestion (crawling)**, where multiple crawler instances retrieve documents in parallel and store them in a replicated datalake.
-- **Asynchronous indexing**, coordinated through a message broker, allowing indexers to process documents independently and reliably.
-- **A distributed in-memory inverted index**, implemented with Hazelcast, which is sharded and replicated across the cluster to ensure fast queries and fault tolerance.
-- **A load-balanced search layer**, using Nginx, that distributes incoming search requests across multiple search service instances and transparently handles node failures.
+## ✨ Descripción del proyecto
 
-The entire system is containerized and deployed using **Docker Compose**, enabling reproducible execution in a laboratory environment. Benchmarking and fault-injection experiments are included to evaluate scalability, performance, and recovery behavior, demonstrating the core properties expected from a modern distributed search platform.
+Este proyecto implementa una **arquitectura de motor de búsqueda distribuida, tolerante a fallos y escalable horizontalmente**. El objetivo es proporcionar una plataforma completa de búsqueda capaz de manejar cargas de trabajo de ingestión, indexación y consulta a través de múltiples nodos cooperando entre sí.
 
-## Build and Run Instructions
+El sistema está diseñado como un conjunto de servicios desplegados en múltiples nodos y contenedores. Soporta **ingestión paralela de documentos, indexación distribuida y búsquedas de baja latencia** bajo carga creciente, manteniéndose operativo ante fallos parciales. La escalabilidad y resiliencia se logran mediante replicación, comunicación asíncrona y compartición de datos en memoria.
 
-### Prerequisites
+Características arquitectónicas clave:
 
-Make sure the following tools are installed on all nodes that will participate in the cluster:
+- **Ingestión distribuida (crawling)**: múltiples instancias descargan documentos en paralelo y los almacenan en un datalake replicado.
+- **Indexación asíncrona** coordinada mediante un broker de mensajería, permitiendo procesar documentos de forma independiente y fiable.
+- **Índice invertido distribuido en memoria**, implementado con Hazelcast, particionado y replicado en el clúster para consultas rápidas y tolerancia a fallos.
+- **Capa de búsqueda balanceada por carga** usando Nginx, que distribuye peticiones entre instancias y maneja automáticamente caídas de nodos.
+
+Todo el sistema es desplegado con **Docker Compose**, permitiendo ejecuciones reproducibles en cualquier entorno. Se incluyen experimentos de benchmarking e inyección de fallos para evaluar escalabilidad, rendimiento y recuperación.
+
+## 🧭 Contexto arquitectónico
+
+Este proyecto (Stage 3) evoluciona a partir del [**Stage 2**](https://github.com/ayozeruanoalc/stage_2), transformando una solución mononodo en un sistema verdaderamente distribuido y preparado para funcionar en clúster:
+
+- **De mononodo a clúster distribuido**: Stage 2 era una solución mononodo, sin carácter distribuido real; Stage 3 está diseñada para ejecutarse en múltiples nodos cooperando entre sí, con escalabilidad horizontal y replicación de datos.
+- **Tolerancia a fallos avanzada**: mientras que en Stage 2 la caída del nodo implicaba pérdida de servicio, Stage 3 combina Hazelcast y ActiveMQ para eliminar puntos únicos de fallo y permitir que el sistema siga respondiendo incluso ante la caída de uno o varios nodos.
+- **Ingesta y procesamiento asíncrono más eficiente**: el pipeline de ingestión e indexación pasa a estar desacoplado y coordinado mediante mensajería, permitiendo que crawlers e indexers trabajen en paralelo de forma fiable.
+- **Almacenamiento y consultas distribuidas**: en Stage 2 el índice invertido se mantenía localmente en MongoDB; en Stage 3 se reemplaza por un índice invertido en memoria distribuido y replicado mediante Hazelcast, garantizando búsquedas rápidas, consistentes y sin punto único de fallo.
+- **Despliegue reproducible y portable**: todos los servicios se contenerizan y orquestan con Docker Compose, facilitando levantar el mismo clúster completo en cualquier entorno de pruebas o laboratorio.
+
+## 🗺️ Diagrama de arquitectura
+
+![Diagrama de arquitectura - Stage 3](docs/architecture-stage3.png)
+
+## 🔧 Instrucciones de Construcción y Ejecución
+
+### 📌 Requisitos Previos
+
+Asegúrate de que las siguientes herramientas estén instaladas en todos los nodos que participarán en el cluster:
 
 - **Java JDK 17**  
-  Verify with:
+  Verifica con:
   ```bash
   java -version
   ```
 
-- **Apache Maven 3.6+**  
-  Verify with:
+- **Apache Maven 3.6+**
+  Verifica con:
   ```bash
   mvn -v
   ```
 
 - **Docker Desktop**
 
-- **curl** (optional, for quick endpoint and health checks)
+- `curl` (opcional, para comprobaciones rápidas de endpoints y estado)
 
----
+### 🏗 Construcción
 
-### Build
-
-All services are built from a single multi-module Maven project. Before running the cluster for the first time, compile and package all services by executing the following command **from the root directory of the repository**:
-
+Todos los servicios se construyen a partir de un proyecto Maven multi-módulo. Antes de ejecutar el cluster por primera vez, compila y empaqueta todos los servicios ejecutando el siguiente comando **desde el directorio raíz del repositorio**:
 ```bash
 mvn clean package
 ```
+Este paso genera los archivos JAR ejecutables requeridos por cada microservicio. Las imágenes de Docker reutilizarán estos artefactos durante el inicio de los contenedores.
 
-This step generates the executable JAR files required by each microservice. Docker images will later reuse these artifacts during container startup.
+### ⚙ Configuración de Servicios (Docker Compose)
 
----
+El sistema se despliega usando **Docker Compose** y se configura mediante variables de entorno definidas en el archivo `docker-compose.yml`. Cada servicio debe estar correctamente parametrizado para poder unirse al cluster en memoria de Hazelcast, descubrir otros miembros del cluster, conectarse al broker central de ActiveMQ si es necesario, etc.
 
-### Service Configuration (Docker Compose)
-
-The system is deployed using **Docker Compose** and configured through environment variables defined in the `docker-compose.yml` file. Each service must be correctly parameterized so it can join the Hazelcast in-memory cluster, discover other cluster members, connect to the central ActiveMQ broker if needed, etc.
-
-All placeholders marked as `xxx` must be replaced with the **host IP address of the machine where the service is running** or, when specified, the IP of the broker node.
+Todos los marcadores `xxx` deben reemplazarse con la **dirección IP de la máquina donde se ejecuta el servicio** o, cuando se indique, con la IP del nodo del broker.
 
 ```yaml
 ingestion-service:
@@ -124,22 +144,25 @@ search-service:
   profiles:
     - backend
 ```
-**Relevant parameters:**
 
-- `HZ_PUBLIC_ADDRESS`: Public address of this service, reachable by other Hazelcast members.
-- `HZ_MEMBERS`: Seed node used for Hazelcast cluster formation.
-- `BROKER_URL`: Address of the ActiveMQ broker.
-- `REPLICATION_FACTOR`: Number of datalake replicas per document.
-- `INDEXING_BUFFER_FACTOR`: Controls batching before publishing indexing events.
-- `SERVICE_PORT`: HTTP port exposed by the search API.
-- `SORTING_CRITERIA`: Ranking strategy used to order search results (`frequency` | `id`)
+**Parámetros relevantes**:
 
----
+- `HZ_PUBLIC_ADDRESS`: Dirección pública de este servicio, accesible por otros miembros de Hazelcast.
+- `HZ_MEMBERS`: Nodo semilla (seed) usado para la formación inicial del clúster de Hazelcast.  
+  Todos los nodos deben apuntar al mismo seed. En el primer nodo del sistema puede apuntar a sí mismo.
+- `BROKER_URL`: Dirección del broker de ActiveMQ.
+- `REPLICATION_FACTOR`: Número de réplicas en el datalake por documento.
+- `INDEXING_BUFFER_FACTOR`: Controla el batching antes de publicar eventos de indexación.
+- `SERVICE_PORT`: Puerto HTTP expuesto por la API de búsqueda.
+- `SORTING_CRITERIA`: Estrategia de ordenación usada para los resultados de búsqueda (`frequency` | `id`).
 
-### Nginx Load Balancer Configuration
+> Nota: los puertos `5701`, `5702` y `5703` se utilizan para la comunicación interna del clúster Hazelcast entre nodos.  
+> El puerto `7003` es el que expone la API HTTP de búsqueda hacia el exterior (y el que debe usar Nginx como backend).
 
-Before starting the load balancer, the `nginx.conf` file must be updated to include the IP addresses of all nodes running a search service. Each backend entry must point to a reachable `<NODE_IP>:7003` endpoint.
 
+### 🖥 Configuración del Balanceador de Carga (Nginx)
+
+Antes de iniciar el balanceador de carga, el archivo `nginx.conf` debe actualizarse para incluir las direcciones IP de todos los nodos que ejecutan un servicio de búsqueda. Cada entrada de backend debe apuntar a un endpoint `<NODE_IP>:7003` accesible.
 ```nginx
 upstream search_backend {
     least_conn;
@@ -151,55 +174,58 @@ upstream search_backend {
 }
 ```
 
-Add or remove `server` lines as search service instances are added or removed. Nginx will automatically distribute traffic and bypass failed nodes.
+Agrega o elimina líneas `server` a medida que se añaden o eliminan instancias de servicio de búsqueda. Nginx distribuirá automáticamente el tráfico y omitirá los nodos fallidos.
 
----
+### 🚀 Perfiles y Arranque con Docker Compose
 
-### Docker Compose Profiles and Startup
+La ejecución de los servicios se controla mediante **perfiles de Docker Compose** permitiendo asignar diferentes roles a distintos nodos:
 
-Service execution is controlled using **Docker Compose profiles**, allowing different roles to be assigned to different nodes:
+- `backend`: servicios de ingestión, indexación y búsqueda
 
-- `backend`: ingestion, indexing, and search services
-- `broker`: ActiveMQ message broker
-- `loadbalancer`: Nginx reverse proxy
+- `broker`: broker de mensajes ActiveMQ
 
-Once all configuration values are correctly set, the cluster can be started.
+- `loadbalancer`: proxy inverso Nginx
 
-#### Main Node (Broker + Backend + Load Balancer)
+Una vez que todos los valores de configuración estén correctamente establecidos, se puede iniciar el cluster.
 
+#### Nodo Principal (Broker + Backend + Load Balancer)
 ```bash
 docker compose --profile backend --profile broker --profile loadbalancer up -d
 ```
 
-#### Additional Nodes (Backend Services Only)
-
+#### Nodos Adicionales (Solo Servicios Backend)
 ```bash
 docker compose --profile backend up -d
 ```
 
-Each node will automatically join the Hazelcast cluster and connect to the broker using the configured parameters. Scaling is achieved by launching additional backend nodes with adjusted IP addresses.
+Cada nodo se unirá automáticamente al clúster de Hazelcast y se conectará al broker usando los parámetros configurados.
 
----
+Para añadir nuevos nodos y escalar horizontalmente:
 
-### Notes
+- Ejecuta en la nueva máquina solo el perfil `backend`.
+- Configura en ese nodo su propia IP en `HZ_PUBLIC_ADDRESS`.
+- Mantén el mismo valor de `HZ_MEMBERS` apuntando al nodo semilla del clúster.
 
-- Docker Compose handles both image building and container execution; no separate `docker build` step is required.
-- Services can be restarted independently without data loss thanks to Hazelcast replication and broker-based coordination.
+De esta forma, el nuevo nodo se integrará automáticamente en el clúster existente y comenzará a participar en la ingestión, indexación y búsqueda.
 
-## Benchmarking
+### 📝 Notas adicionales
 
-### Benchmark Summary
+- Docker Compose gestiona tanto la construcción de imágenes como la ejecución de contenedores; no se requiere un paso separado de `docker build`.
+- Los servicios se pueden reiniciar de manera independiente sin pérdida de datos gracias a la replicación de Hazelcast y la coordinación mediante el broker.
 
-A set of controlled benchmarks was executed to evaluate the **performance, scalability, and fault tolerance** of the distributed search engine under different workloads. The experiments focus on:
+## 📊 Benchmarking (Pruebas de Rendimiento)
 
-- Ingestion rate and indexing throughput
-- Search query latency under concurrent load
-- Horizontal scalability when adding service replicas
-- Fault tolerance and recovery time after simulated node failures
+### 📈 Resumen
 
----
+Se ejecutó un conjunto de pruebas controladas (reproducibles mediante el servicio de benchmark incluido) para evaluar el **rendimiento, la escalabilidad y la tolerancia a fallos** del motor de búsqueda distribuido bajo diferentes cargas de trabajo. Los experimentos se centran en:
 
-### Benchmark Service Configuration
+- Tasa de ingestión y rendimiento de indexación
+- Latencia de consultas de búsqueda bajo carga concurrente
+- Escalabilidad horizontal al agregar réplicas de servicios
+- Tolerancia a fallos y tiempo de recuperación tras fallos simulados de nodos
+
+
+### 🧪 Configuración del Servicio de Benchmark
 
 ```yaml
 benchmark:
@@ -207,46 +233,44 @@ benchmark:
     BENCHMARK_MODE: recoverytime
 ```
 
-Supported benchmark modes:
+Modos de benchmark soportados:
+- `ingestionrate`: documentos por segundo (docs/s)
+- `indexingthroughput`: tokens por segundo (tokens/s)
+- `recoverytime`: tiempo de recuperación del clúster tras fallos
 
-- `ingestionrate`: documents per second (docs/s)
-- `indexingthroughput`: tokens per second (tokens/s)
-- `recoverytime`: cluster recovery time after failures
+### 🔁 Reproducción de los Benchmarks
 
----
-
-### Reproducing the Benchmarks
-
-1. Deploy the system using Docker Compose.
-2. Populate the datalake using the ingestion service.
-3. Set `BENCHMARK_MODE` to the desired experiment.
-4. Start the benchmark service:
-
+1. Desplegar el sistema usando Docker Compose.
+2. Poblar el datalake usando el servicio de ingestión.
+3. Configurar `BENCHMARK_MODE` al experimento deseado.
+4. Iniciar el servicio de benchmark:
 ```bash
 docker compose --profile benchmark up -d
 ```
+5. Escalar los servicios backend y repetir las pruebas según sea necesario.
+6. Simular fallos deteniendo contenedores durante la ejecución.
 
-5. Scale backend services and repeat tests as needed.
-6. Simulate failures by stopping containers during execution.
+### ⏱️ Benchmark de Latencia de Consultas (Apache JMeter)
 
----
+La latencia de las consultas se midió usando **Apache JMeter**. Con el sistema en ejecución, ejecutar:
 
-### Query Latency Benchmark (Apache JMeter)
+- `load-test.jmx` (ubicado en `/benchmarks`)
 
-Query latency was measured using **Apache JMeter**. With the system running, execute:
+El directorio `/benchmarks` también contiene conjuntos de datos, registros y resultados de benchmarks anteriores.
 
-- `load-test.jmx` (located in `/benchmarks`)
+## 🎥 Vídeo de Demostración
 
-The `/benchmarks` directory also contains datasets, logs, and previous benchmark results.
+👉 [[Stage 3] Search Engine Project - GuancheData](https://youtu.be/RHMDEk85xtI)
 
-## Demonstration Video
+El vídeo muestra el despliegue completo del clúster desde cero, la ingestión y búsqueda en tiempo real, la adición dinámica de nodos para escalar horizontalmente bajo carga y la recuperación automática del sistema tras la caída simulada de servicios.
 
-👉 [[Stage 3] Search Engine Project - GuancheData (ULPGC)](https://youtu.be/tb8FYEy7YjY)
+## 👥 Autores
 
-The video demonstrates system deployment, real-time ingestion and search operations, horizontal
-scaling under load, and automatic recovery after simulated failures.
-
-
+- **Fabio Nesta Arteaga** — 🔗 [GitHub](https://github.com/NestX10)
+- **Pablo Cabeza** — 🔗 [GitHub](https://github.com/pabcablan)
+- **Joel Ojeda** — 🔗 [GitHub](https://github.com/joelojeda)
+- **Enrique Reina** — 🔗 [GitHub](https://github.com/ellupe)
+- **Ayoze Ruano** — 🔗 [GitHub](https://github.com/ayozeruanoalc)
 
 
 
