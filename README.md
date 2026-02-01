@@ -49,14 +49,12 @@ Este proyecto (Stage 3) evoluciona a partir del [**Stage 2**](https://github.com
 
 Asegúrate de que las siguientes herramientas estén instaladas en todos los nodos que participarán en el cluster:
 
-- **Java JDK 17**  
-  Verifica con:
+- **Java JDK 17**<br>Verifica con:
   ```bash
   java -version
   ```
 
-- **Apache Maven 3.6+**
-  Verifica con:
+- **Apache Maven 3.6+**<br>Verifica con:
   ```bash
   mvn -v
   ```
